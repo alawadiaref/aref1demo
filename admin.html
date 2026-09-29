@@ -134,8 +134,9 @@
 
             <!-- Projects -->
             <section class="tab" data-panel="projects" hidden>
-                <p class="hint">أسماء ووصف المشاريع تُعدَّل من تبويب «النصوص» (قسم الأعمال). هنا الرابط والحالة.</p>
-                <div id="projectsList" class="cards"></div>
+                <p class="hint">أضف مشاريعك أو عدّلها أو احذفها، ورتّبها بالأسهم. الصورة تُصغَّر تلقائيًا وتُرفع مع «حفظ ونشر».</p>
+                <div id="projectsList" class="rows"></div>
+                <button class="btn btn--ghost add-btn" id="addProject" type="button">＋ إضافة مشروع</button>
             </section>
 
             <!-- Skills -->
@@ -178,6 +179,7 @@
                     <div class="row">
                         <button class="btn btn--ghost" id="exportBtn">⬇ تنزيل content.json</button>
                         <label class="btn btn--ghost">⬆ استيراد<input type="file" id="importFile" accept="application/json" hidden></label>
+                        <button class="btn btn--ghost" id="discardBtn" type="button">✖ تجاهل التعديلات غير المنشورة</button>
                         <button class="btn btn--danger" id="resetBtn">إرجاع كل شيء للافتراضي</button>
                     </div>
                 </div>
