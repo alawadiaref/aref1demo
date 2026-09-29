@@ -1,0 +1,134 @@
+/* ===== Interactive layer ===== */
+:root {
+    --term-bg: #0a1618;
+    --term-bar: #11252a;
+    --term-text: #cfe7ea;
+    --term-dim: #6f9197;
+    --term-accent: #5ed3db;
+    --term-warm: #e0a9a9;
+    --term-ok: #86efac;
+}
+
+/* ---------- Cursor glow (desktop only, added by JS) ---------- */
+.cursor-dot, .cursor-ring {
+    position: fixed; left: 0; top: 0; pointer-events: none; z-index: 999; border-radius: 50%;
+    translate: -50% -50%; will-change: transform; opacity: 0; transition: opacity .3s;
+}
+.cursor-on .cursor-dot, .cursor-on .cursor-ring { opacity: 1; }
+.cursor-dot { width: 6px; height: 6px; background: var(--teal-strong); }
+.cursor-ring {
+    width: 34px; height: 34px; border: 1.5px solid color-mix(in srgb, var(--teal) 70%, transparent);
+    transition: width .25s, height .25s, background .25s, border-color .25s, opacity .3s;
+}
+.cursor-ring.is-link {
+    width: 56px; height: 56px; border-color: var(--maroon);
+    background: color-mix(in srgb, var(--maroon) 10%, transparent);
+}
+.cursor-ring.is-down { width: 24px; height: 24px; }
+
+/* ---------- Tilt + glare ---------- */
+.tilt { position: relative; transform-style: preserve-3d; }
+.tilt::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+    background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--teal-strong) 18%, transparent), transparent 45%);
+    transition: opacity .3s;
+}
+.tilt:hover::after { opacity: 1; }
+.tilt.tilting { transition: transform .12s ease-out !important; }
+
+/* ---------- Ripple ---------- */
+.btn, .copy-btn, .tool-btn { position: relative; overflow: hidden; }
+.ripple {
+    position: absolute; border-radius: 50%; pointer-events: none; translate: -50% -50%;
+    width: 10px; height: 10px; background: rgba(255, 255, 255, .45); animation: ripple .6s ease-out forwards;
+}
+@keyframes ripple { to { width: 360px; height: 360px; opacity: 0; } }
+.btn { transition: transform .25s, box-shadow .25s, background .25s, translate .2s ease-out; }
+
+/* ---------- Hero parallax ---------- */
+.hero__art, .doodles span { transition: translate .4s ease-out; }
+
+/* ---------- Timeline fill on scroll ---------- */
+.timeline::after {
+    content: ""; position: absolute; inset-inline-start: 7px; top: 6px; width: 2px; border-radius: 2px;
+    height: calc((100% - 12px) * var(--fill, 0));
+    background: linear-gradient(to bottom, var(--teal-strong), var(--maroon));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--teal-strong) 60%, transparent);
+}
+
+/* ---------- Terminal section ---------- */
+.term-sec {
+    background:
+        radial-gradient(700px 400px at 15% 20%, rgba(94, 211, 219, .12), transparent 70%),
+        radial-gradient(600px 400px at 85% 90%, rgba(201, 143, 143, .12), transparent 70%),
+        #081113;
+    color: #eaf6f7;
+}
+.term-sec .t1 { color: #eaf6f7; }
+.term-sec .t2 { color: var(--term-warm); }
+.term-sec .sub { color: var(--term-dim); }
+
+.term {
+    max-width: 820px; margin-inline: auto; border-radius: 16px; overflow: hidden;
+    background: var(--term-bg); border: 1px solid rgba(94, 211, 219, .2);
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 255, 255, .03) inset;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Tajawal", monospace; font-size: .95rem;
+    text-align: left;
+}
+.term__bar {
+    display: flex; align-items: center; gap: .8rem; padding: .7rem 1rem; background: var(--term-bar);
+    border-bottom: 1px solid rgba(255, 255, 255, .05);
+}
+.term__dots { display: flex; gap: .4rem; }
+.term__dots i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+.term__dots i:nth-child(2) { background: #febc2e; }
+.term__dots i:nth-child(3) { background: #28c840; }
+.term__title { color: var(--term-dim); font-size: .82rem; margin-inline: auto; padding-inline-end: 3rem; }
+.term__body {
+    height: 330px; overflow-y: auto; padding: 1rem 1.2rem .4rem; color: var(--term-text); line-height: 1.7;
+    scrollbar-width: thin; scrollbar-color: #24424a transparent;
+}
+.term__line { white-space: pre-wrap; word-break: break-word; animation: termIn .25s ease both; }
+.term__line[dir="rtl"] { text-align: right; font-family: "Tajawal", sans-serif; }
+@keyframes termIn { from { opacity: 0; transform: translateY(4px); } }
+.term__cmd { color: var(--term-dim); }
+.term__cmd b { color: var(--term-accent); font-weight: 600; }
+.term__line.accent { color: var(--term-accent); }
+.term__line.warm { color: var(--term-warm); }
+.term__line.ok { color: var(--term-ok); }
+.term__line.dim { color: var(--term-dim); }
+.term__line a { color: var(--term-accent); text-decoration: underline; text-underline-offset: 3px; }
+.term__line .k { color: var(--term-accent); display: inline-block; min-width: 9ch; }
+
+.term__input {
+    display: flex; align-items: center; gap: .6rem; padding: .7rem 1.2rem 1rem; border-top: 1px dashed rgba(255, 255, 255, .06);
+}
+.term__prompt { color: var(--term-ok); white-space: nowrap; }
+.term__prompt b { color: var(--term-accent); font-weight: 600; }
+.term__input input {
+    flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: #fff;
+    font: inherit; caret-color: var(--term-accent);
+}
+.term:focus-within { border-color: rgba(94, 211, 219, .55); }
+
+.term__chips { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin-top: 1.4rem; }
+.term__chips button {
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; cursor: pointer;
+    padding: .35rem .9rem; border-radius: 999px; color: var(--term-text);
+    background: rgba(94, 211, 219, .06); border: 1px solid rgba(94, 211, 219, .25); transition: .2s;
+}
+.term__chips button:hover, .term__chips button:focus-visible {
+    background: rgba(94, 211, 219, .18); border-color: var(--term-accent); color: #fff; outline: none; transform: translateY(-2px);
+}
+
+@media (max-width: 640px) {
+    .term { font-size: .85rem; }
+    .term__body { height: 300px; padding: .8rem .9rem .3rem; }
+    .term__input { padding: .6rem .9rem .9rem; }
+    .term__title { padding-inline-end: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .cursor-dot, .cursor-ring { display: none; }
+}
+.term__line .k.ar { font-family: "Tajawal", sans-serif; font-weight: 700; }
+body:has(.term:focus-within) .toTop { opacity: 0; pointer-events: none; }

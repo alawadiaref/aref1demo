@@ -3,6 +3,7 @@ window.EN_TEXT = {
     "nav.about": "About me",
     "nav.journey": "Journey",
     "nav.skills": "Skills",
+    "nav.term": "Try me",
     "nav.works": "My Works",
     "nav.contact": "Contact Me",
 
@@ -64,6 +65,10 @@ window.EN_TEXT = {
     "lang.en": "English",
     "lang.mid": "Good & improving",
     "skills.hobby": "🎯 In my free time: I work on developing my personality and style.",
+
+    "term.t1": "Talk to the",
+    "term.t2": "Terminal",
+    "term.sub": "Type a command or tap a suggestion — the way developers work",
 
     "works.t1": "my upcoming",
     "works.t2": "Works",

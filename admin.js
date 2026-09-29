@@ -13,7 +13,7 @@ const MAX_TRIES = 5, LOCK_SECONDS = 60;
 const GROUPS = {
     nav: "القائمة", hero: "الواجهة الرئيسية", about: "من أنا", stats: "الأرقام", journey: "مسيرتي",
     skills: "المهارات", lvl: "مستويات المهارات", lang: "اللغات", works: "الأعمال", contact: "التواصل",
-    form: "نموذج الرسالة", footer: "التذييل",
+    form: "نموذج الرسالة", footer: "التذييل", term: "الترمنال التفاعلي",
 };
 const PROJECTS = [
     { id: "w1", img: "assets/imgs/landingPage.png", name: "works.w1.t" },

@@ -15,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="intro.css">
+    <link rel="stylesheet" href="interact.css">
     <script>
         // الانترو يظهر مرة واحدة في كل جلسة، ولا يظهر في وضع المعاينة
         try {
@@ -82,6 +83,7 @@
                     <li><a href="#aboutMe" data-i18n="nav.about">من أنا</a></li>
                     <li><a href="#journey" data-i18n="nav.journey">مسيرتي</a></li>
                     <li><a href="#skills" data-i18n="nav.skills">مهاراتي</a></li>
+                    <li><a href="#terminal" data-i18n="nav.term">جرّبني</a></li>
                     <li><a href="#myWorks" data-i18n="nav.works">أعمالي</a></li>
                     <li><a href="#contactMe" data-i18n="nav.contact">تواصل معي</a></li>
                 </ul>
@@ -268,6 +270,29 @@
             </div>
         </section>
 
+        <!-- ===== Interactive terminal ===== -->
+        <section class="section term-sec" id="terminal">
+            <div class="container">
+                <div class="sectionTitle reveal">
+                    <h2><span class="t1" data-i18n="term.t1">تكلّم مع</span> <span class="t2" data-i18n="term.t2">الترمنال</span></h2>
+                    <p class="sub" data-i18n="term.sub">اكتب أمرًا أو اضغط على أحد الاقتراحات — مثل ما يشتغل المبرمجين</p>
+                </div>
+
+                <div class="term reveal" id="term" dir="ltr">
+                    <div class="term__bar">
+                        <span class="term__dots"><i></i><i></i><i></i></span>
+                        <span class="term__title">aref@alawadi-studio: ~</span>
+                    </div>
+                    <div class="term__body" id="termBody" aria-live="polite"></div>
+                    <form class="term__input" id="termForm" autocomplete="off">
+                        <span class="term__prompt">aref@studio<b>:~$</b></span>
+                        <input id="termInput" type="text" spellcheck="false" autocapitalize="off" aria-label="Terminal command">
+                    </form>
+                </div>
+                <div class="term__chips" id="termChips"></div>
+            </div>
+        </section>
+
         <!-- ===== Works ===== -->
         <section class="section Works" id="myWorks">
             <div class="container">
@@ -373,5 +398,6 @@
     <script src="i18n-en.js"></script>
     <script src="script.js"></script>
     <script src="intro.js"></script>
+    <script src="interact.js"></script>
 </body>
 </html>
