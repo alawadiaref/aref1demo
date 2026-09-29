@@ -20,15 +20,13 @@ const PROJECTS = [
     { id: "w2", img: "assets/imgs/webApp.png", name: "works.w2.t" },
     { id: "w3", img: "assets/imgs/app.png", name: "works.w3.t" },
 ];
-const SKILLS = [
-    { id: "html", name: "HTML5" }, { id: "css", name: "CSS3" },
-    { id: "js", name: "JavaScript" }, { id: "git", name: "Git & GitHub" },
-];
 const DEFAULT_ROLES = {
     ar: ["مبرمج طموح", "مطوّر ويب", "متعلّم لا يتوقف", "صانع أفكار"],
     en: ["Aspiring Developer", "Web Developer", "Lifelong Learner", "Software Engineer"],
 };
-const DEFAULT_CONTACT = { email: "Alawadiaref12@gmail.com", phone: "+966 55 724 3832", whatsapp: "966557243832" };
+const ORIGINAL_COLORS = { primary: "#5e9eae", accent: "#7c4e4e" };
+// نصوص تُدار من قوائم المهارات والتواصل بدل تبويب النصوص
+const LIST_KEYS = /^(skills\.s\d+|lvl\..+|contact\.(email|phone|wa|waCta))$/;
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -118,18 +116,24 @@ $("#logout").addEventListener("click", () => {
 });
 
 // ================= Data =================
-const DEF = { ar: {}, en: { ...window.EN_TEXT }, skills: {} };
+const DEF = { ar: {}, en: { ...window.EN_TEXT }, skills: {}, skillsList: [], chips: [], contacts: window.DEFAULT_CONTACTS };
 let content = {};
 let dirty = false;
+const copy = (x) => JSON.parse(JSON.stringify(x));
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 async function loadDefaults() {
     const html = await (await fetch("index.html", { cache: "no-store" })).text();
     const doc = new DOMParser().parseFromString(html, "text/html");
     $$("[data-i18n]", doc).forEach((el) => { DEF.ar[el.dataset.i18n] ??= el.textContent; });
     DEF.ar["works.live"] = "متاح الآن";
-    $$("[data-skill]", doc).forEach((el) => {
-        DEF.skills[el.dataset.skill] = parseInt(el.style.getPropertyValue("--w"), 10) || 0;
+    DEF.skillsList = $$(".bars li", doc).map((li) => {
+        const fill = $("[data-skill]", li), key = $(".lvl", li).dataset.i18n;
+        const level = parseInt(fill.style.getPropertyValue("--w"), 10) || 0;
+        DEF.skills[fill.dataset.skill] = level;
+        return { id: fill.dataset.skill, key, name: $(".bar-head span", li).textContent, level, ar: DEF.ar[key], en: DEF.en[key] };
     });
+    DEF.chips = $$(".chips li", doc).map((li) => ({ ar: DEF.ar[li.dataset.i18n], en: DEF.en[li.dataset.i18n] }));
 }
 
 async function loadContent() {
@@ -140,15 +144,32 @@ async function loadContent() {
     return {};
 }
 
+// يكمّل البيانات الناقصة ويحوّل الإعدادات القديمة للقوائم الجديدة
 function normalize(c) {
     c = c && typeof c === "object" ? c : {};
     c.text ??= {};
     c.text.ar ??= {};
     c.text.en ??= {};
     c.roles ??= {};
-    c.contact ??= {};
     c.projects ??= {};
-    c.skills ??= {};
+    const T = (l, k) => c.text[l][k] ?? DEF[l][k];
+
+    if (!Array.isArray(c.skillsList)) {
+        c.skillsList = DEF.skillsList.map((d) => ({
+            name: d.name, level: c.skills?.[d.id] ?? d.level, ar: T("ar", d.key), en: T("en", d.key),
+        }));
+    }
+    if (!Array.isArray(c.chips)) {
+        c.chips = DEF.chips.map((d, i) => ({ ar: T("ar", `skills.s${i + 1}`) ?? d.ar, en: T("en", `skills.s${i + 1}`) ?? d.en }));
+    }
+    if (!Array.isArray(c.contacts)) {
+        const old = c.contact || {};
+        c.contacts = DEF.contacts.map((d) => ({ ...d, value: old[d.type] || d.value }));
+    }
+    if (!Array.isArray(c.commands)) c.commands = [];
+    c.theme ??= { ...ORIGINAL_COLORS };
+    delete c.skills;
+    delete c.contact;
     return c;
 }
 
@@ -162,14 +183,21 @@ function setDirty(v = true) {
 
 // يحذف القيم المطابقة للافتراضي حتى يبقى الملف صغيرًا
 function clean(c) {
-    const out = { text: { ar: {}, en: {} }, roles: {}, contact: {}, projects: {}, skills: {} };
+    const out = { text: { ar: {}, en: {} }, roles: {}, projects: {} };
     for (const l of ["ar", "en"]) {
         for (const [k, v] of Object.entries(c.text[l])) if (v !== DEF[l][k]) out.text[l][k] = v;
         if (c.roles[l]?.length && c.roles[l].join("\n") !== DEFAULT_ROLES[l].join("\n")) out.roles[l] = c.roles[l];
     }
-    for (const [k, v] of Object.entries(c.contact)) if (v && v !== DEFAULT_CONTACT[k]) out.contact[k] = v;
     for (const [k, p] of Object.entries(c.projects)) if (p.url || p.live) out.projects[k] = { url: p.url || "", live: !!p.live };
-    for (const [k, v] of Object.entries(c.skills)) if (+v !== DEF.skills[k]) out.skills[k] = +v;
+
+    const skills = c.skillsList.map(({ name, level, ar, en }) => ({ name, level: +level, ar, en }));
+    if (!same(skills, DEF.skillsList.map(({ name, level, ar, en }) => ({ name, level, ar, en })))) out.skillsList = skills;
+    if (!same(c.chips, DEF.chips)) out.chips = c.chips;
+    const contacts = c.contacts.filter((x) => (x.value || "").trim());
+    if (!same(contacts, DEF.contacts)) out.contacts = contacts;
+    const cmds = c.commands.filter((x) => (x.name || "").trim());
+    if (cmds.length) out.commands = cmds;
+    if (!same(c.theme, ORIGINAL_COLORS)) out.theme = c.theme;
     return out;
 }
 
@@ -178,7 +206,7 @@ function renderTexts() {
     const list = $("#textsList");
     list.textContent = "";
     const byGroup = {};
-    Object.keys(DEF.ar).forEach((k) => (byGroup[k.split(".")[0]] ??= []).push(k));
+    Object.keys(DEF.ar).filter((k) => !LIST_KEYS.test(k)).forEach((k) => (byGroup[k.split(".")[0]] ??= []).push(k));
 
     const sel = $("#groupFilter");
     if (sel.options.length === 1) {
@@ -278,14 +306,6 @@ function renderRoles() {
     });
 }
 
-function renderContact() {
-    [["email", "#cEmail"], ["phone", "#cPhone"], ["whatsapp", "#cWhats"]].forEach(([k, id]) => {
-        const i = $(id);
-        i.value = content.contact[k] || DEFAULT_CONTACT[k];
-        i.oninput = () => { content.contact[k] = i.value.trim(); setDirty(); };
-    });
-}
-
 function renderProjects() {
     const list = $("#projectsList");
     list.textContent = "";
@@ -325,41 +345,193 @@ function renderProjects() {
     });
 }
 
-function renderSkills() {
-    const list = $("#skillsList");
-    list.textContent = "";
-    SKILLS.forEach((s) => {
-        const box = document.createElement("div");
-        box.className = "card-box";
-        const h = document.createElement("h3");
-        h.textContent = s.name;
-        const row = document.createElement("div");
-        row.className = "range-row";
-        const r = document.createElement("input");
-        r.type = "range";
-        r.min = 0;
-        r.max = 100;
-        r.step = 5;
-        r.value = content.skills[s.id] ?? DEF.skills[s.id] ?? 0;
-        const out = document.createElement("output");
-        out.textContent = r.value + "%";
-        r.addEventListener("input", () => {
-            content.skills[s.id] = +r.value;
-            out.textContent = r.value + "%";
-            setDirty();
-        });
-        row.append(r, out);
-        box.append(h, row);
-        list.append(box);
+// ---------- Generic list editor (move up/down, delete, add) ----------
+const mk = (tag, props = {}, ...kids) => {
+    const n = document.createElement(tag);
+    Object.assign(n, props);
+    n.append(...kids);
+    return n;
+};
+function field(label, input, cls = "field") {
+    return mk("label", { className: cls }, mk("span", { textContent: label }), input);
+}
+function textInput(value, onInput, opts = {}) {
+    const i = mk(opts.area ? "textarea" : "input", { value: value ?? "", placeholder: opts.ph || "" });
+    if (opts.area) i.rows = opts.rows || 3;
+    if (opts.dir) i.dir = opts.dir;
+    i.addEventListener("input", () => { onInput(i.value); setDirty(); });
+    return i;
+}
+
+function listEditor(box, arr, buildRow, rerender) {
+    box.textContent = "";
+    if (!arr.length) box.append(mk("p", { className: "empty", textContent: "لا يوجد عناصر — اضغط زر الإضافة تحت." }));
+    arr.forEach((item, idx) => {
+        const row = mk("div", { className: "row-card" });
+        const tools = mk("div", { className: "row-tools" });
+        const btn = (txt, title, fn, dis) => {
+            const b = mk("button", { type: "button", textContent: txt, title, disabled: !!dis });
+            b.setAttribute("aria-label", title);
+            b.addEventListener("click", () => { fn(); setDirty(); rerender(); });
+            return b;
+        };
+        tools.append(
+            mk("span", { className: "row-num", textContent: idx + 1 }),
+            btn("↑", "تحريك لأعلى", () => arr.splice(idx - 1, 0, arr.splice(idx, 1)[0]), idx === 0),
+            btn("↓", "تحريك لأسفل", () => arr.splice(idx + 1, 0, arr.splice(idx, 1)[0]), idx === arr.length - 1),
+            btn("🗑", "حذف", () => arr.splice(idx, 1)),
+        );
+        row.append(tools, buildRow(item, idx));
+        box.append(row);
     });
 }
+const focusLast = (sel, what) => $$(`${sel} .row-card`).at(-1)?.querySelector(what)?.focus();
+
+// ---------- Skills ----------
+function renderSkills() {
+    listEditor($("#skillsList"), content.skillsList, (s) => {
+        const range = mk("input", { type: "range", min: 0, max: 100, step: 5, value: s.level ?? 50 });
+        const out = mk("output", { textContent: (s.level ?? 50) + "%" });
+        range.addEventListener("input", () => { s.level = +range.value; out.textContent = range.value + "%"; setDirty(); });
+        return mk("div", { className: "row-fields grid2" },
+            field("اسم المهارة", textInput(s.name, (v) => { s.name = v; }, { ph: "مثل: React", dir: "ltr" })),
+            field("النسبة", mk("div", { className: "range-row" }, range, out)),
+            field("المستوى بالعربي", textInput(s.ar, (v) => { s.ar = v; }, { ph: "مثل: جيد" })),
+            field("Level in English", textInput(s.en, (v) => { s.en = v; }, { ph: "e.g. Good", dir: "ltr" })),
+        );
+    }, renderSkills);
+
+    listEditor($("#chipsList"), content.chips, (ch) => mk("div", { className: "row-fields grid2" },
+        field("عربي", textInput(ch.ar, (v) => { ch.ar = v; }, { ph: "⚡ سريع التعلّم" })),
+        field("English", textInput(ch.en, (v) => { ch.en = v; }, { ph: "⚡ Fast learner", dir: "ltr" })),
+    ), renderSkills);
+}
+$("#addSkill").addEventListener("click", () => {
+    content.skillsList.push({ name: "", level: 50, ar: "أتعلمها الآن", en: "Learning now" });
+    setDirty(); renderSkills(); focusLast("#skillsList", "input");
+});
+$("#addChip").addEventListener("click", () => {
+    content.chips.push({ ar: "", en: "" });
+    setDirty(); renderSkills(); focusLast("#chipsList", "input");
+});
+
+// ---------- Contact accounts ----------
+function renderContacts() {
+    const TYPES = window.CONTACT_TYPES;
+    listEditor($("#contactsList"), content.contacts, (x) => {
+        const sel = mk("select");
+        Object.entries(TYPES).forEach(([k, t]) => sel.add(new Option(t.ar, k, false, k === x.type)));
+        const ico = mk("span", { className: "row-ico" });
+        ico.innerHTML = TYPES[x.type]?.icon || "";   // أيقونات ثابتة من site-data.js
+        const preview = mk("small", { className: "row-preview", dir: "ltr" });
+        const updatePreview = () => {
+            preview.textContent = x.value?.trim() ? "↗ " + TYPES[x.type].href(x.value) : "";
+        };
+        const val = textInput(x.value, (v) => { x.value = v; updatePreview(); }, { ph: TYPES[x.type]?.ph, dir: "ltr" });
+        sel.addEventListener("change", () => {
+            x.type = sel.value;
+            ico.innerHTML = TYPES[x.type].icon;
+            val.placeholder = TYPES[x.type].ph;
+            updatePreview();
+            setDirty();
+        });
+        updatePreview();
+        return mk("div", { className: "row-fields" },
+            mk("div", { className: "grid2" },
+                field("النوع", mk("div", { className: "type-row" }, ico, sel)),
+                field("اسم المستخدم أو الرابط", val),
+                field("عنوان مخصص بالعربي (اختياري)", textInput(x.ar, (v) => { x.ar = v || undefined; }, { ph: TYPES[x.type]?.ar })),
+                field("Custom label in English (optional)", textInput(x.en, (v) => { x.en = v || undefined; }, { ph: TYPES[x.type]?.en, dir: "ltr" })),
+            ),
+            preview,
+        );
+    }, renderContacts);
+}
+$("#addContact").addEventListener("click", () => {
+    content.contacts.push({ type: "instagram", value: "" });
+    setDirty(); renderContacts(); focusLast("#contactsList", "select");
+});
+
+// ---------- Terminal commands ----------
+const BUILT_IN = ["help", "about", "whoami", "skills", "journey", "projects", "contact", "cv", "hire", "theme", "lang", "date", "clear", "hello", "sudo"];
+function renderCommands() {
+    listEditor($("#commandsList"), content.commands, (c) => {
+        const warn = mk("small", { className: "row-warn" });
+        const check = () => {
+            warn.textContent = BUILT_IN.includes((c.name || "").toLowerCase())
+                ? "⚠️ هذا الاسم لأمر جاهز — أمرك سيحل محله." : "";
+        };
+        const name = textInput(c.name, (v) => {
+            c.name = v.trim().toLowerCase().replace(/\s+/g, "-");
+            if (name.value !== c.name) name.value = c.name;
+            check();
+        }, { ph: "hobby", dir: "ltr" });
+        const chip = mk("input", { type: "checkbox", checked: !!c.chip });
+        chip.addEventListener("change", () => { c.chip = chip.checked; setDirty(); });
+        check();
+        return mk("div", { className: "row-fields" },
+            mk("div", { className: "grid2" },
+                field("اسم الأمر", name),
+                field("أسماء بديلة (اختياري)", textInput(c.aliases, (v) => { c.aliases = v; }, { ph: "هواياتي, hobbies" })),
+                field("وصف في قائمة help بالعربي", textInput(c.descAr, (v) => { c.descAr = v; }, { ph: "هواياتي" })),
+                field("Description in help (English)", textInput(c.descEn, (v) => { c.descEn = v; }, { ph: "my hobbies", dir: "ltr" })),
+                field("الرد بالعربي", textInput(c.ar, (v) => { c.ar = v; }, { area: true, ph: "أحب القراءة وكرة القدم ⚽" })),
+                field("Reply in English", textInput(c.en, (v) => { c.en = v; }, { area: true, ph: "I love reading and football ⚽", dir: "ltr" })),
+            ),
+            warn,
+            mk("label", { className: "check" }, chip, " إظهاره كزر اقتراح تحت الترمنال"),
+        );
+    }, renderCommands);
+}
+$("#addCommand").addEventListener("click", () => {
+    content.commands.push({ name: "", aliases: "", ar: "", en: "", descAr: "", descEn: "", chip: true });
+    setDirty(); renderCommands(); focusLast("#commandsList", "input");
+});
+
+// ---------- Colors ----------
+function paintSwatch() {
+    const { primary, accent } = content.theme;
+    const sw = $("#swatch");
+    sw.style.setProperty("--p", primary);
+    sw.style.setProperty("--a", accent);
+    $("#cPrimary").value = primary; $("#cPrimaryHex").value = primary;
+    $("#cAccent").value = accent; $("#cAccentHex").value = accent;
+    $$("#presets button").forEach((b) => b.classList.toggle("active", b.dataset.p === primary && b.dataset.a === accent));
+}
+function setColor(k, v) {
+    if (!/^#[0-9a-f]{6}$/i.test(v)) { toast("اكتب اللون بصيغة ‎#RRGGBB"); paintSwatch(); return; }
+    content.theme[k] = v.toLowerCase();
+    paintSwatch();
+    setDirty();
+}
+function renderColors() {
+    const box = $("#presets");
+    box.textContent = "";
+    window.COLOR_PRESETS.forEach((p) => {
+        const dots = mk("span", { className: "preset__dots" });
+        dots.style.background = `linear-gradient(135deg, ${p.primary} 50%, ${p.accent} 50%)`;
+        const b = mk("button", { type: "button", className: "preset" }, dots, mk("span", { textContent: p.ar }));
+        b.dataset.p = p.primary;
+        b.dataset.a = p.accent;
+        b.addEventListener("click", () => { content.theme = { primary: p.primary, accent: p.accent }; paintSwatch(); setDirty(); });
+        box.append(b);
+    });
+    paintSwatch();
+}
+$("#cPrimary").addEventListener("input", (e) => setColor("primary", e.target.value));
+$("#cAccent").addEventListener("input", (e) => setColor("accent", e.target.value));
+$("#cPrimaryHex").addEventListener("change", (e) => setColor("primary", e.target.value.trim()));
+$("#cAccentHex").addEventListener("change", (e) => setColor("accent", e.target.value.trim()));
+$("#resetColors").addEventListener("click", () => { content.theme = { ...ORIGINAL_COLORS }; paintSwatch(); setDirty(); });
 
 function renderAll() {
     renderTexts();
     renderRoles();
-    renderContact();
-    renderProjects();
     renderSkills();
+    renderContacts();
+    renderCommands();
+    renderColors();
+    renderProjects();
 }
 
 // ================= Tabs =================
