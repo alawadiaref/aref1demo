@@ -22,7 +22,7 @@
                 notFound: (c) => `الأمر غير موجود: ${c} — اكتب help لعرض الأوامر`,
                 help: {
                     about: "من أنا", skills: "مهاراتي", journey: "مسيرتي وخبرتي", projects: "أعمالي",
-                    contact: "طرق التواصل", cv: "تحميل السيرة الذاتية", hire: "وظّفني 😉",
+                    certs: "شهاداتي ودوراتي", contact: "طرق التواصل", cv: "تحميل السيرة الذاتية", hire: "وظّفني 😉",
                     theme: "تبديل الوضع الليلي/النهاري", lang: "تبديل اللغة", date: "التاريخ والوقت", clear: "مسح الشاشة",
                 },
                 hello: "وعليكم السلام! نورت الترمنال ✨",
@@ -38,7 +38,7 @@
                 notFound: (c) => `command not found: ${c} — type help to list commands`,
                 help: {
                     about: "who I am", skills: "my skills", journey: "my journey & experience", projects: "my works",
-                    contact: "how to reach me", cv: "download my CV", hire: "hire me 😉",
+                    certs: "my certificates & courses", contact: "how to reach me", cv: "download my CV", hire: "hire me 😉",
                     theme: "toggle dark/light mode", lang: "switch language", date: "date & time", clear: "clear the screen",
                 },
                 hello: "Hey there! Glad you stopped by ✨",
@@ -119,6 +119,15 @@
                     line(kv(txt("small", a), ""), "", false).append(link(a.href, txt(".val", a), a.target === "_blank"));
                 });
             },
+            certs() {
+                const cards = qa("#certsGrid .cert");
+                if (q("#certs").hidden || !cards.length) { line(isAr() ? "لا توجد شهادات منشورة حاليًا — قريبًا 🎓" : "No certificates published yet — coming soon 🎓", "dim"); return; }
+                cards.forEach((card) => {
+                    const row = line(`${txt(".cert__ico", card)} ${txt("h3", card)}${txt(".cert__issuer", card) ? " — " + txt(".cert__issuer", card) : ""}${txt(".cert__date", card) ? "  (" + txt(".cert__date", card) + ")" : ""}`);
+                    const a = q(".work__link", card);
+                    if (a) { row.append("  "); row.append(link(a.href, "↗")); }
+                });
+            },
             cv() { line(link("assets/Aref-Alawadi-CV.pdf", "⬇ " + t().cvText)); },
             hire() {
                 line(t().hire, "ok");
@@ -136,6 +145,7 @@
             "مساعدة": "help", "من": "about", "مهارات": "skills", "مسيرة": "journey", "مسيرتي": "journey",
             "مشاريع": "projects", "اعمال": "projects", "أعمال": "projects", "تواصل": "contact", "سيرة": "cv",
             "وظفني": "hire", "ثيم": "theme", "لغة": "lang", "تاريخ": "date", "مسح": "clear",
+            "شهادات": "certs", "شهاداتي": "certs", "دورات": "certs", "courses": "certs", "certificates": "certs",
             "سلام": "hello", "مرحبا": "hello", "هلا": "hello", "hi": "hello", "hey": "hello",
             "السلام": "hello", "experience": "journey", "works": "projects", "ls": "help", "cls": "clear",
         };
@@ -262,7 +272,7 @@
     // =====================================================
     // 3D tilt + glare on cards
     // =====================================================
-    const TILT = ".work, .card, .stat, .cCard";
+    const TILT = ".work, .card, .stat, .cCard, .cert";
     let tilted = null;
     const untilt = () => {
         if (!tilted) return;

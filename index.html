@@ -88,6 +88,7 @@
                     <li><a href="#aboutMe" data-i18n="nav.about">من أنا</a></li>
                     <li><a href="#journey" data-i18n="nav.journey">مسيرتي</a></li>
                     <li><a href="#skills" data-i18n="nav.skills">مهاراتي</a></li>
+                    <li id="navCerts" hidden><a href="#certs" data-i18n="nav.certs">شهاداتي</a></li>
                     <li><a href="#terminal" data-i18n="nav.term">جرّبني</a></li>
                     <li><a href="#myWorks" data-i18n="nav.works">أعمالي</a></li>
                     <li><a href="#contactMe" data-i18n="nav.contact">تواصل معي</a></li>
@@ -272,6 +273,25 @@
                         <p class="hobby" data-i18n="skills.hobby">🎯 في وقت فراغي: أطوّر شخصيتي وأسلوبي.</p>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- ===== Certificates & courses (managed from the admin panel) ===== -->
+        <section class="section certs" id="certs" hidden>
+            <div class="container">
+                <div class="sectionTitle reveal">
+                    <h2><span class="t1" data-i18n="certs.t1">شهاداتي</span> <span class="t2" data-i18n="certs.t2">ودوراتي</span></h2>
+                    <p class="sub" data-i18n="certs.sub">كل دورة خطوة جديدة في طريق البرمجة</p>
+                </div>
+                <div class="certs__filters" role="tablist">
+                    <button type="button" class="active" data-filter="all" data-i18n="certs.all">الكل</button>
+                    <button type="button" data-filter="cert" data-i18n="certs.cert">الشهادات</button>
+                    <button type="button" data-filter="course" data-i18n="certs.course">الدورات</button>
+                </div>
+                <ul class="certs__grid" id="certsGrid"></ul>
+                <span hidden data-i18n="certs.view">عرض الشهادة</span>
+                <span hidden data-i18n="certs.typeCert">شهادة</span>
+                <span hidden data-i18n="certs.typeCourse">دورة</span>
             </div>
         </section>
 

@@ -544,3 +544,39 @@ html[dir="rtl"] .preview-bar__btn::before { content: "→"; }
     .aboutMe__art img { max-height: 70vh; width: auto; }
     .nav { max-height: calc(100vh - var(--header-h) - 1rem); overflow-y: auto; }
 }
+
+/* ===== Certificates & courses ===== */
+.certs__filters {
+    display: flex; justify-content: center; flex-wrap: wrap; gap: .5rem; margin: -2rem 0 2.5rem;
+}
+.certs__filters button {
+    padding: .45rem 1.2rem; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+    color: var(--text-soft); font-weight: 600; transition: .2s;
+}
+.certs__filters button:hover { border-color: var(--teal); color: var(--text); }
+.certs__filters button.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+.certs__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; align-items: start; }
+@media (max-width: 1023px) { .certs__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cert {
+    display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform .3s, box-shadow .3s;
+}
+.cert:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+.cert[hidden] { display: none; }
+.cert__img { display: block; aspect-ratio: 16 / 10; background: var(--bg-alt); overflow: hidden; border-bottom: 1px solid var(--line); }
+.cert__img img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+.cert:hover .cert__img img { transform: scale(1.05); }
+.cert__body { padding: 1.3rem 1.4rem 1.5rem; display: grid; gap: .45rem; align-content: start; }
+.cert__top { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.cert__ico { font-size: 1.3rem; line-height: 1; }
+.cert__type { font-size: .78rem; font-weight: 700; padding: .12rem .7rem; border-radius: 999px; }
+.cert__type--cert { color: var(--teal-deep); background: color-mix(in srgb, var(--teal) 16%, transparent); }
+.cert__type--course { color: var(--maroon); background: color-mix(in srgb, var(--maroon) 14%, transparent); }
+.cert__date {
+    margin-inline-start: auto; font-family: "Poppins", sans-serif; font-size: .82rem; color: var(--text-soft);
+    font-variant-numeric: tabular-nums;
+}
+.cert h3 { font-size: 1.15rem; line-height: 1.5; }
+.cert__issuer { color: var(--text-soft); font-size: .95rem; }
+.cert .work__link { margin-top: .4rem; justify-self: start; }
+@media (max-width: 640px) { .certs__grid { grid-template-columns: 1fr; } }

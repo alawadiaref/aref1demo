@@ -162,6 +162,7 @@ function applyContent(c) {
     window.SITE_COMMANDS = Array.isArray(c.commands) ? c.commands : [];
 
     renderProjects(c);
+    renderCerts(c);
 
     // نسب المهارات القديمة (قبل قائمة المهارات القابلة للتعديل)
     if (!Array.isArray(c.skillsList)) {
@@ -299,6 +300,63 @@ function renderProjects(c) {
         $(".badge", card).classList.toggle("badge--live", !!p.live);
     });
 }
+
+// ----- Certificates & courses -----
+function renderCerts(c) {
+    const list = Array.isArray(c.certs) ? c.certs.filter((x) => (x.titleAr || x.titleEn || "").trim()) : [];
+    const show = !!c.sections?.certs && list.length > 0;
+    $("#certs").hidden = !show;
+    $("#navCerts").hidden = !show;
+    const grid = $("#certsGrid");
+    grid.textContent = "";
+    if (!show) return;
+
+    list.forEach((x, i) => {
+        const type = x.type === "course" ? "course" : "cert";
+        const li = el("li", "cert reveal in");
+        li.dataset.type = type;
+        if (safeImg(x.image)) {
+            const pic = el("a", "cert__img");
+            pic.href = x.url && /^https?:\/\//i.test(x.url) ? x.url : x.image;
+            pic.target = "_blank";
+            pic.rel = "noopener";
+            const img = el("img");
+            img.src = x.image;
+            img.alt = x.titleEn || x.titleAr || "";
+            img.loading = "lazy";
+            pic.append(img);
+            li.append(pic);
+        }
+        const body = el("div", "cert__body");
+        const top = el("div", "cert__top");
+        const badge = i18nText(el("span", "cert__type cert__type--" + type), type === "course" ? "certs.typeCourse" : "certs.typeCert",
+            AR[type === "course" ? "certs.typeCourse" : "certs.typeCert"], EN[type === "course" ? "certs.typeCourse" : "certs.typeCert"]);
+        top.append(el("span", "cert__ico", type === "course" ? "📚" : "🎓"), badge);
+        if (x.date) { const d = el("span", "cert__date", x.date); d.dir = "ltr"; top.append(d); }
+        body.append(top, i18nText(el("h3"), `dyn.cert.${i}.t`, x.titleAr, x.titleEn));
+        if (x.issuerAr || x.issuerEn) body.append(i18nText(el("p", "cert__issuer"), `dyn.cert.${i}.i`, x.issuerAr, x.issuerEn));
+        if (/^https?:\/\//i.test(x.url || "")) {
+            const a = el("a", "work__link");
+            a.href = x.url;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.append(i18nText(el("span"), "certs.view", AR["certs.view"], EN["certs.view"]), " ↗");
+            body.append(a);
+        }
+        li.append(body);
+        grid.append(li);
+    });
+
+    // الفلاتر تظهر فقط إذا فيه النوعين
+    const types = new Set(list.map((x) => (x.type === "course" ? "course" : "cert")));
+    $(".certs__filters").hidden = types.size < 2;
+}
+$$(".certs__filters button").forEach((b) => b.addEventListener("click", () => {
+    $$(".certs__filters button").forEach((x) => x.classList.toggle("active", x === b));
+    $$("#certsGrid .cert").forEach((card) => {
+        card.hidden = b.dataset.filter !== "all" && card.dataset.type !== b.dataset.filter;
+    });
+}));
 
 // شريط وضع المعاينة مع زر الرجوع للوحة التحكم
 if (new URLSearchParams(location.search).has("preview")) {
