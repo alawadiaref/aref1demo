@@ -465,3 +465,19 @@ html[dir="rtl"] .bar i { margin-inline-start: 0; background: linear-gradient(270
 .work__link:hover { color: var(--maroon); border-color: var(--maroon); }
 .work__link[hidden] { display: none; }
 .badge--live { color: #15803d; background: rgba(34, 197, 94, .15); }
+
+/* hidden admin gesture: soft glow while holding the logo, light flash on unlock */
+.logo { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.logo img { -webkit-user-drag: none; }
+.logo--hold img { animation: logoGlow .8s ease-in-out forwards; }
+@keyframes logoGlow {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--teal-strong) 0%, transparent); }
+    100% { box-shadow: 0 0 18px 6px color-mix(in srgb, var(--teal-strong) 55%, transparent); transform: scale(1.06); }
+}
+body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 300; opacity: 0;
+    background: radial-gradient(circle at 10% 5%, color-mix(in srgb, var(--teal-strong) 45%, #fff), transparent 70%);
+}
+html[dir="rtl"] body::after { background: radial-gradient(circle at 90% 5%, color-mix(in srgb, var(--teal-strong) 45%, #fff), transparent 70%); }
+body.admin-flash::after { animation: softFlash .45s ease-out; }
+@keyframes softFlash { 0% { opacity: 0; } 35% { opacity: .55; } 100% { opacity: 0; } }

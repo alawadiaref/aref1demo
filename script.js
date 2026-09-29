@@ -198,14 +198,43 @@ async function loadContent() {
     return null;
 }
 
-// ----- Hidden admin entry: 5 quick clicks on the logo -----
-let logoClicks = 0, logoTimer;
-$("#logo").addEventListener("click", () => {
-    logoClicks++;
-    clearTimeout(logoTimer);
-    logoTimer = setTimeout(() => { logoClicks = 0; }, 1500);
-    if (logoClicks >= 5) location.href = "admin.html";
+// ----- Hidden admin entry: two quick taps on the logo, then a long press -----
+const logo = $("#logo");
+const TAP_GAP = 1200, HOLD_MS = 800;
+let taps = 0, lastTap = 0, downAt = 0, holdTimer = null, unlocked = false;
+
+function resetLogo() {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    logo.classList.remove("logo--hold");
+}
+
+logo.addEventListener("pointerdown", () => {
+    downAt = Date.now();
+    if (Date.now() - lastTap > TAP_GAP) taps = 0;
+    if (taps !== 2) return;
+    // الضغطة الثالثة: وميض خفيف أثناء الضغط المطوّل
+    logo.classList.add("logo--hold");
+    holdTimer = setTimeout(() => {
+        unlocked = true;
+        resetLogo();
+        document.body.classList.add("admin-flash");
+        setTimeout(() => { location.href = "admin.html"; }, 450);
+    }, HOLD_MS);
 });
+
+function onRelease() {
+    if (!downAt) return;
+    const held = Date.now() - downAt;
+    downAt = 0;
+    if (holdTimer) { resetLogo(); taps = 0; return; }   // الضغطة الثالثة لم تكتمل
+    if (held < 400) { taps++; lastTap = Date.now(); } else taps = 0;
+}
+logo.addEventListener("pointerup", onRelease);
+logo.addEventListener("pointercancel", () => { downAt = 0; resetLogo(); taps = 0; });
+logo.addEventListener("pointerleave", () => { if (holdTimer) { downAt = 0; resetLogo(); taps = 0; } });
+logo.addEventListener("contextmenu", (e) => e.preventDefault());
+logo.addEventListener("click", (e) => { if (taps || unlocked) e.preventDefault(); });
 
 $("#year").textContent = new Date().getFullYear();
 setLang(lang);
