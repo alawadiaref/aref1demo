@@ -52,6 +52,7 @@
                 <button data-tab="commands">💻 أوامر الترمنال</button>
                 <button data-tab="colors">🎨 الألوان</button>
                 <button data-tab="projects">🗂️ المشاريع</button>
+                <button data-tab="certs">🎓 الشهادات والدورات</button>
                 <button data-tab="publish">🚀 النشر والإعدادات</button>
             </nav>
             <button class="side__out" id="logout">تسجيل الخروج</button>
@@ -137,6 +138,23 @@
                 <p class="hint">أضف مشاريعك أو عدّلها أو احذفها، ورتّبها بالأسهم. الصورة تُصغَّر تلقائيًا وتُرفع مع «حفظ ونشر».</p>
                 <div id="projectsList" class="rows"></div>
                 <button class="btn btn--ghost add-btn" id="addProject" type="button">＋ إضافة مشروع</button>
+            </section>
+
+            <!-- Certificates & courses -->
+            <section class="tab" data-panel="certs" hidden>
+                <div class="card-box toggle-box">
+                    <label class="switch">
+                        <input type="checkbox" id="certsVisible">
+                        <span class="switch__track"><span class="switch__thumb"></span></span>
+                        <span class="switch__text">
+                            <b>إظهار قسم الشهادات والدورات في الموقع</b>
+                            <small id="certsState">القسم مخفي حاليًا</small>
+                        </span>
+                    </label>
+                </div>
+                <p class="hint">أضف شهاداتك ودوراتك. تقدر ترفع صورة الشهادة وتحط رابط التحقق منها. عناوين القسم تتعدل من تبويب «النصوص».</p>
+                <div id="certsList" class="rows"></div>
+                <button class="btn btn--ghost add-btn" id="addCert" type="button">＋ إضافة شهادة أو دورة</button>
             </section>
 
             <!-- Skills -->

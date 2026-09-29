@@ -13,7 +13,7 @@ const MAX_TRIES = 5, LOCK_SECONDS = 60;
 const GROUPS = {
     nav: "القائمة", hero: "الواجهة الرئيسية", about: "من أنا", stats: "الأرقام", journey: "مسيرتي",
     skills: "المهارات", lvl: "مستويات المهارات", lang: "اللغات", works: "الأعمال", contact: "التواصل",
-    form: "نموذج الرسالة", footer: "التذييل", term: "الترمنال التفاعلي",
+    form: "نموذج الرسالة", footer: "التذييل", term: "الترمنال التفاعلي", certs: "الشهادات والدورات",
 };
 const DEFAULT_ROLES = {
     ar: ["مبرمج طموح", "مطوّر ويب", "متعلّم لا يتوقف", "صانع أفكار"],
@@ -177,6 +177,9 @@ function normalize(c) {
         }));
     }
     delete c.projects;
+    if (!Array.isArray(c.certs)) c.certs = [];
+    c.sections ??= {};
+    c.sections.certs = !!c.sections.certs;
     c.theme ??= { ...ORIGINAL_COLORS };
     delete c.skills;
     delete c.contact;
@@ -224,6 +227,9 @@ function clean(c) {
     const cmds = c.commands.filter((x) => (x.name || "").trim());
     if (cmds.length) out.commands = cmds;
     if (!same(c.theme, ORIGINAL_COLORS)) out.theme = c.theme;
+    const certs = c.certs.filter((x) => (x.titleAr || x.titleEn || "").trim());
+    if (certs.length) out.certs = certs;
+    if (c.sections.certs) out.sections = { certs: true };
     return out;
 }
 
@@ -440,7 +446,7 @@ $("#addContact").addEventListener("click", () => {
 });
 
 // ---------- Terminal commands ----------
-const BUILT_IN = ["help", "about", "whoami", "skills", "journey", "projects", "contact", "cv", "hire", "theme", "lang", "date", "clear", "hello", "sudo"];
+const BUILT_IN = ["help", "about", "whoami", "skills", "journey", "projects", "certs", "contact", "cv", "hire", "theme", "lang", "date", "clear", "hello", "sudo"];
 function renderCommands() {
     listEditor($("#commandsList"), content.commands, (c) => {
         const warn = mk("small", { className: "row-warn" });
@@ -583,6 +589,70 @@ $("#addProject").addEventListener("click", () => {
     setDirty(); renderProjects(); focusLast("#projectsList", ".grid2 input");
 });
 
+// ---------- Certificates & courses ----------
+function paintCertsState() {
+    const on = content.sections.certs, n = content.certs.filter((x) => (x.titleAr || x.titleEn || "").trim()).length;
+    $("#certsVisible").checked = on;
+    $("#certsState").textContent = !on ? "القسم مخفي حاليًا"
+        : n ? `القسم ظاهر في الموقع (${n})` : "مفعّل، لكن لن يظهر حتى تضيف شهادة أو دورة واحدة على الأقل";
+}
+$("#certsVisible").addEventListener("change", (e) => {
+    content.sections.certs = e.target.checked;
+    paintCertsState();
+    setDirty();
+});
+
+function imagePicker(item, onChange) {
+    const pic = mk("div", { className: "proj-pic" });
+    const paint = () => {
+        pic.textContent = "";
+        if (item.image) pic.append(mk("img", { src: item.image, alt: "" }));
+        else pic.append(mk("span", { textContent: "بدون صورة (اختياري)" }));
+    };
+    paint();
+    const file = mk("input", { type: "file", accept: "image/png,image/jpeg,image/webp,image/gif", hidden: true });
+    file.addEventListener("change", async () => {
+        const f = file.files[0];
+        file.value = "";
+        if (!f) return;
+        try {
+            item.image = await shrinkImage(f);
+            paint(); onChange?.(); setDirty();
+            toast("تم تجهيز الصورة — تُرفع مع الحفظ والنشر");
+        } catch { toast("الصورة غير مدعومة — استخدم PNG أو JPG أو WebP"); }
+    });
+    const upload = mk("label", { className: "btn btn--ghost small-btn" }, "📷 رفع صورة", file);
+    const clear = mk("button", { type: "button", className: "btn btn--danger small-btn", textContent: "إزالة الصورة" });
+    clear.addEventListener("click", () => { item.image = ""; paint(); setDirty(); });
+    return mk("div", { className: "proj-side" }, pic, mk("div", { className: "row" }, upload, clear));
+}
+
+function renderCerts() {
+    paintCertsState();
+    listEditor($("#certsList"), content.certs, (x) => {
+        const type = mk("select");
+        type.add(new Option("🎓 شهادة", "cert", false, x.type !== "course"));
+        type.add(new Option("📚 دورة", "course", false, x.type === "course"));
+        type.addEventListener("change", () => { x.type = type.value; setDirty(); });
+        return mk("div", { className: "row-fields proj-row" },
+            imagePicker(x),
+            mk("div", { className: "grid2" },
+                field("النوع", type),
+                field("التاريخ (اختياري)", textInput(x.date, (v) => { x.date = v.trim(); }, { ph: "2025", dir: "ltr" })),
+                field("اسم الشهادة/الدورة بالعربي", textInput(x.titleAr, (v) => { x.titleAr = v; paintCertsState(); }, { ph: "أساسيات تطوير الويب" })),
+                field("Title (English)", textInput(x.titleEn, (v) => { x.titleEn = v; paintCertsState(); }, { ph: "Web Development Basics", dir: "ltr" })),
+                field("الجهة المانحة بالعربي", textInput(x.issuerAr, (v) => { x.issuerAr = v; }, { ph: "مثل: منصة سطر، كورسيرا، أكاديمية طويق" })),
+                field("Issuer (English)", textInput(x.issuerEn, (v) => { x.issuerEn = v; }, { ph: "e.g. Coursera", dir: "ltr" })),
+                field("رابط الشهادة أو التحقق (اختياري)", textInput(x.url, (v) => { x.url = v.trim(); }, { ph: "https://", dir: "ltr" })),
+            ),
+        );
+    }, renderCerts);
+}
+$("#addCert").addEventListener("click", () => {
+    content.certs.push({ type: "cert", titleAr: "", titleEn: "", issuerAr: "", issuerEn: "", date: "", url: "", image: "" });
+    setDirty(); renderCerts(); focusLast("#certsList", ".grid2 input");
+});
+
 function renderAll() {
     renderTexts();
     renderRoles();
@@ -591,6 +661,7 @@ function renderAll() {
     renderCommands();
     renderColors();
     renderProjects();
+    renderCerts();
 }
 
 // ================= Tabs =================
@@ -645,13 +716,13 @@ async function publish() {
     const headers = { Authorization: `Bearer ${gh.token}`, Accept: "application/vnd.github+json" };
     try {
         // 1) رفع صور المشاريع الجديدة إلى assets/projects/
-        const pending = content.projectsList.filter((p) => (p.image || "").startsWith("data:image/"));
+        const pending = [...content.projectsList, ...content.certs].filter((p) => (p.image || "").startsWith("data:image/"));
         for (const [n, p] of pending.entries()) {
             btn.textContent = `رفع الصور ${n + 1}/${pending.length}…`;
             const [, mime, data] = p.image.match(/^data:image\/([a-z]+);base64,(.+)$/i) || [];
             if (!data) continue;
             const ext = mime.toLowerCase() === "jpeg" ? "jpg" : mime.toLowerCase();
-            const path = `assets/projects/${Date.now()}-${n + 1}.${ext}`;
+            const path = `assets/uploads/${Date.now()}-${n + 1}.${ext}`;
             const up = await fetch(repoApi + path, {
                 method: "PUT", headers,
                 body: JSON.stringify({ message: "Upload project image from admin panel", content: data, branch: gh.branch }),
@@ -659,7 +730,7 @@ async function publish() {
             if (!up.ok) throw new Error(up.status);
             p.image = path;
         }
-        if (pending.length) { saveDraft(); renderProjects(); }
+        if (pending.length) { saveDraft(); renderProjects(); renderCerts(); }
         btn.textContent = "جارٍ النشر…";
 
         // 2) حفظ المحتوى
