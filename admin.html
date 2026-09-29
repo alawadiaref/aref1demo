@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>لوحة التحكم | Alawadi Studio</title>
+    <link rel="icon" href="assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin">
+
+    <!-- ===== Login ===== -->
+    <section class="login" id="loginView">
+        <form class="login__card" id="loginForm" autocomplete="off">
+            <img src="assets/logo.png" alt="Alawadi Studio" width="72" height="72">
+            <h1><span class="t1">لوحة</span> <span class="t2">التحكم</span></h1>
+            <p class="sub">مخصصة لصاحب الموقع فقط</p>
+            <label>
+                <span>اسم المستخدم</span>
+                <input type="text" name="user" required autocomplete="username" dir="ltr">
+            </label>
+            <label>
+                <span>كلمة المرور</span>
+                <div class="pass">
+                    <input type="password" name="pass" required autocomplete="current-password" dir="ltr">
+                    <button type="button" class="pass__eye" id="togglePass" aria-label="إظهار كلمة المرور">👁</button>
+                </div>
+            </label>
+            <p class="login__err" id="loginErr" role="alert"></p>
+            <button class="btn btn--primary" type="submit" id="loginBtn">دخول</button>
+            <a class="back" href="index.html">← الرجوع للموقع</a>
+        </form>
+    </section>
+
+    <!-- ===== Dashboard ===== -->
+    <div class="dash" id="dashView" hidden>
+        <aside class="side">
+            <a class="side__logo" href="index.html" target="_blank" rel="noopener">
+                <img src="assets/logo.png" alt="" width="40" height="40">
+                <span>Alawadi <b>Admin</b></span>
+            </a>
+            <nav class="side__nav">
+                <button class="active" data-tab="texts">📝 النصوص</button>
+                <button data-tab="roles">⌨️ المسميات المتحركة</button>
+                <button data-tab="contact">📞 التواصل</button>
+                <button data-tab="projects">🗂️ المشاريع</button>
+                <button data-tab="skills">📊 المهارات</button>
+                <button data-tab="publish">🚀 النشر والإعدادات</button>
+            </nav>
+            <button class="side__out" id="logout">تسجيل الخروج</button>
+        </aside>
+
+        <main class="panel">
+            <header class="bar-top">
+                <div>
+                    <h2 id="tabTitle">النصوص</h2>
+                    <p class="status" id="status">لا توجد تغييرات</p>
+                </div>
+                <div class="bar-top__btns">
+                    <button class="btn btn--ghost" id="previewBtn">👁 معاينة</button>
+                    <button class="btn btn--primary" id="publishBtn">🚀 حفظ ونشر</button>
+                </div>
+            </header>
+
+            <!-- Texts -->
+            <section class="tab" data-panel="texts">
+                <div class="tools">
+                    <input type="search" id="search" placeholder="ابحث في النصوص…">
+                    <select id="groupFilter"><option value="">كل الأقسام</option></select>
+                </div>
+                <div id="textsList"></div>
+            </section>
+
+            <!-- Roles -->
+            <section class="tab" data-panel="roles" hidden>
+                <p class="hint">المسميات التي تُكتب وتُمسح في أعلى الصفحة. اكتب كل مسمى في سطر.</p>
+                <div class="grid2">
+                    <label class="field"><span>عربي</span><textarea id="rolesAr" rows="6"></textarea></label>
+                    <label class="field"><span>English</span><textarea id="rolesEn" rows="6" dir="ltr"></textarea></label>
+                </div>
+            </section>
+
+            <!-- Contact -->
+            <section class="tab" data-panel="contact" hidden>
+                <div class="grid2">
+                    <label class="field"><span>البريد الإلكتروني</span><input type="email" id="cEmail" dir="ltr"></label>
+                    <label class="field"><span>رقم الجوال (كما يظهر)</span><input type="text" id="cPhone" dir="ltr"></label>
+                    <label class="field"><span>رقم الواتساب (بالمفتاح الدولي بدون +)</span><input type="text" id="cWhats" dir="ltr" placeholder="966557243832"></label>
+                </div>
+            </section>
+
+            <!-- Projects -->
+            <section class="tab" data-panel="projects" hidden>
+                <p class="hint">أسماء ووصف المشاريع تُعدَّل من تبويب «النصوص» (قسم الأعمال). هنا الرابط والحالة.</p>
+                <div id="projectsList" class="cards"></div>
+            </section>
+
+            <!-- Skills -->
+            <section class="tab" data-panel="skills" hidden>
+                <p class="hint">نسبة كل شريط في قسم المهارات التقنية.</p>
+                <div id="skillsList" class="cards"></div>
+            </section>
+
+            <!-- Publish -->
+            <section class="tab" data-panel="publish" hidden>
+                <div class="card-box">
+                    <h3>النشر على GitHub</h3>
+                    <p class="hint">
+                        الحفظ يكتب الملف <code>data/content.json</code> في المستودع، ويتحدث الموقع خلال دقيقة تقريبًا.
+                        تحتاج «Fine-grained token» من GitHub بصلاحية <b>Contents: Read and write</b> على هذا المستودع فقط.
+                        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">إنشاء توكن ↗</a>
+                    </p>
+                    <div class="grid2">
+                        <label class="field"><span>المالك (Owner)</span><input type="text" id="ghOwner" dir="ltr"></label>
+                        <label class="field"><span>المستودع (Repo)</span><input type="text" id="ghRepo" dir="ltr"></label>
+                        <label class="field"><span>الفرع (Branch)</span><input type="text" id="ghBranch" dir="ltr"></label>
+                        <label class="field"><span>التوكن (Token)</span><input type="password" id="ghToken" dir="ltr" autocomplete="off"></label>
+                    </div>
+                    <label class="check"><input type="checkbox" id="ghRemember"> تذكّر التوكن على هذا الجهاز</label>
+                </div>
+
+                <div class="card-box">
+                    <h3>نسخة احتياطية</h3>
+                    <p class="hint">نزّل ملف المحتوى، أو استورد ملفًا سابقًا.</p>
+                    <div class="row">
+                        <button class="btn btn--ghost" id="exportBtn">⬇ تنزيل content.json</button>
+                        <label class="btn btn--ghost">⬆ استيراد<input type="file" id="importFile" accept="application/json" hidden></label>
+                        <button class="btn btn--danger" id="resetBtn">إرجاع كل شيء للافتراضي</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="i18n-en.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

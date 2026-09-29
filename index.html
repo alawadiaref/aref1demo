@@ -22,7 +22,7 @@
     <!-- ===== Header ===== -->
     <header class="header">
         <div class="container header__inner">
-            <a href="#home" class="logo" aria-label="Alawadi Studio">
+            <a href="#home" class="logo" id="logo" aria-label="Alawadi Studio">
                 <img src="assets/logo.png" alt="Alawadi Studio" width="56" height="56">
                 <span class="logo__text">Alawadi <b>Studio</b></span>
             </a>
@@ -181,10 +181,10 @@
                     <div class="card reveal">
                         <h3 data-i18n="skills.tech">تقنية</h3>
                         <ul class="bars">
-                            <li><div class="bar-head"><span>HTML5</span><span class="lvl" data-i18n="lvl.good">جيد</span></div><div class="bar"><i style="--w:70%"></i></div></li>
-                            <li><div class="bar-head"><span>CSS3</span><span class="lvl" data-i18n="lvl.good">جيد</span></div><div class="bar"><i style="--w:60%"></i></div></li>
-                            <li><div class="bar-head"><span>JavaScript</span><span class="lvl" data-i18n="lvl.learning">أتعلمها الآن</span></div><div class="bar"><i style="--w:30%"></i></div></li>
-                            <li><div class="bar-head"><span>Git &amp; GitHub</span><span class="lvl" data-i18n="lvl.learning">أتعلمها الآن</span></div><div class="bar"><i style="--w:30%"></i></div></li>
+                            <li><div class="bar-head"><span>HTML5</span><span class="lvl" data-i18n="lvl.good">جيد</span></div><div class="bar"><i data-skill="html" style="--w:70%"></i></div></li>
+                            <li><div class="bar-head"><span>CSS3</span><span class="lvl" data-i18n="lvl.good">جيد</span></div><div class="bar"><i data-skill="css" style="--w:60%"></i></div></li>
+                            <li><div class="bar-head"><span>JavaScript</span><span class="lvl" data-i18n="lvl.learning">أتعلمها الآن</span></div><div class="bar"><i data-skill="js" style="--w:30%"></i></div></li>
+                            <li><div class="bar-head"><span>Git &amp; GitHub</span><span class="lvl" data-i18n="lvl.learning">أتعلمها الآن</span></div><div class="bar"><i data-skill="git" style="--w:30%"></i></div></li>
                         </ul>
                     </div>
 
@@ -227,31 +227,34 @@
                 </div>
 
                 <ul class="works__grid">
-                    <li class="work reveal">
+                    <li class="work reveal" data-project="w1">
                         <div class="work__img"><img src="assets/imgs/landingPage.png" alt="Landing Page"></div>
                         <div class="work__body">
                             <span class="badge" data-i18n="works.soon">قريبًا</span>
                             <h3 data-i18n="works.w1.t">صفحة هبوط</h3>
                             <p data-i18n="works.w1.d">صفحة تعريفية عصرية وسريعة، متجاوبة مع كل الشاشات.</p>
                             <div class="tags"><span>HTML</span><span>CSS</span></div>
+                            <a class="work__link" href="#" target="_blank" rel="noopener" hidden><span data-i18n="works.view">عرض المشروع</span> ↗</a>
                         </div>
                     </li>
-                    <li class="work reveal">
+                    <li class="work reveal" data-project="w2">
                         <div class="work__img"><img src="assets/imgs/webApp.png" alt="Web App"></div>
                         <div class="work__body">
                             <span class="badge" data-i18n="works.soon">قريبًا</span>
                             <h3 data-i18n="works.w2.t">تطبيق ويب</h3>
                             <p data-i18n="works.w2.d">تطبيق تفاعلي يعمل من المتصفح بتجربة استخدام سلسة.</p>
                             <div class="tags"><span>HTML</span><span>CSS</span><span>JS</span></div>
+                            <a class="work__link" href="#" target="_blank" rel="noopener" hidden><span data-i18n="works.view">عرض المشروع</span> ↗</a>
                         </div>
                     </li>
-                    <li class="work reveal">
+                    <li class="work reveal" data-project="w3">
                         <div class="work__img"><img src="assets/imgs/app.png" alt="Mobile App"></div>
                         <div class="work__body">
                             <span class="badge" data-i18n="works.soon">قريبًا</span>
                             <h3 data-i18n="works.w3.t">تطبيق جوال</h3>
                             <p data-i18n="works.w3.d">تطبيق خاص باسمي — الحلم الذي أعمل من أجله.</p>
                             <div class="tags"><span>Mobile</span><span>UI</span></div>
+                            <a class="work__link" href="#" target="_blank" rel="noopener" hidden><span data-i18n="works.view">عرض المشروع</span> ↗</a>
                         </div>
                     </li>
                 </ul>
@@ -268,15 +271,15 @@
 
                 <div class="contact reveal">
                     <div class="contact__cards">
-                        <a class="cCard" href="mailto:Alawadiaref12@gmail.com">
+                        <a class="cCard" id="cEmail" href="mailto:Alawadiaref12@gmail.com">
                             <span class="cCard__ico"><img src="assets/svg/Email.svg" alt="" width="28" height="21"></span>
-                            <span><small data-i18n="contact.email">البريد الإلكتروني</small><b dir="ltr">Alawadiaref12@gmail.com</b></span>
+                            <span><small data-i18n="contact.email">البريد الإلكتروني</small><b dir="ltr" class="val">Alawadiaref12@gmail.com</b></span>
                         </a>
-                        <a class="cCard" href="tel:+966557243832">
+                        <a class="cCard" id="cPhone" href="tel:+966557243832">
                             <span class="cCard__ico"><img src="assets/svg/phone.svg" alt="" width="22" height="22"></span>
-                            <span><small data-i18n="contact.phone">الجوال</small><b dir="ltr">+966 55 724 3832</b></span>
+                            <span><small data-i18n="contact.phone">الجوال</small><b dir="ltr" class="val">+966 55 724 3832</b></span>
                         </a>
-                        <a class="cCard" href="https://wa.me/966557243832" target="_blank" rel="noopener">
+                        <a class="cCard" id="cWhats" href="https://wa.me/966557243832" target="_blank" rel="noopener">
                             <span class="cCard__ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg></span>
                             <span><small data-i18n="contact.wa">واتساب</small><b data-i18n="contact.waCta">راسلني مباشرة</b></span>
                         </a>
@@ -317,6 +320,7 @@
     </button>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <script src="i18n-en.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

@@ -454,3 +454,12 @@ html[dir="rtl"] .bar i { margin-inline-start: 0; background: linear-gradient(270
     .reveal { opacity: 1; transform: none; }
     .section, .hero { padding: 1.5rem 0; min-height: auto; }
 }
+
+/* project link + live badge (managed from admin) */
+.work__link {
+    display: inline-flex; align-items: center; gap: .3rem; margin-top: 1rem; font-weight: 700;
+    color: var(--teal-deep); border-bottom: 2px solid color-mix(in srgb, var(--teal) 40%, transparent);
+}
+.work__link:hover { color: var(--maroon); border-color: var(--maroon); }
+.work__link[hidden] { display: none; }
+.badge--live { color: #15803d; background: rgba(34, 197, 94, .15); }
