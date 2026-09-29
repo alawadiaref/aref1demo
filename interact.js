@@ -80,6 +80,11 @@
             help() {
                 const h = t().help;
                 Object.entries(h).forEach(([k, v]) => line(kv(k, "— " + v), "", false));
+                const mine = custom();
+                if (mine.length) {
+                    line("—".repeat(24), "dim", false);
+                    mine.forEach((c) => line(kv(c.name, "— " + (isAr() ? c.descAr || c.descEn : c.descEn || c.descAr || "")), "", false));
+                }
             },
             about() {
                 line(txt('[data-i18n="hero.name"]'), "accent");
@@ -110,10 +115,9 @@
                 });
             },
             contact() {
-                const em = txt("#cEmail .val"), ph = txt("#cPhone .val");
-                line(kv(t().email, ""), "", false).append(link("mailto:" + em, em, false));
-                line(kv(t().phone, ""), "", false).append(link(q("#cPhone").href, ph, false));
-                line(kv(t().wa, ""), "", false).append(link(q("#cWhats").href, "wa.me ↗"));
+                qa(".contact__cards .cCard").forEach((a) => {
+                    line(kv(txt("small", a), ""), "", false).append(link(a.href, txt(".val", a), a.target === "_blank"));
+                });
             },
             cv() { line(link("assets/Aref-Alawadi-CV.pdf", "⬇ " + t().cvText)); },
             hire() {
@@ -136,6 +140,21 @@
             "السلام": "hello", "experience": "journey", "works": "projects", "ls": "help", "cls": "clear",
         };
 
+        // أوامر مضافة من لوحة التحكم
+        const custom = () => (window.SITE_COMMANDS || []).filter((c) => c && c.name);
+        function findCustom(word) {
+            return custom().find((c) => c.name.toLowerCase() === word ||
+                (c.aliases || "").split(",").map((a) => a.trim().toLowerCase()).filter(Boolean).includes(word));
+        }
+        function reply(text) {
+            String(text || "").split("\n").forEach((ln) => {
+                const d = line("");
+                ln.split(/(https?:\/\/\S+)/g).forEach((part, i) => {
+                    d.append(i % 2 ? link(part, part) : part);
+                });
+            });
+        }
+
         function run(raw) {
             const cmd = raw.trim();
             if (!cmd) return;
@@ -148,8 +167,10 @@
             hIndex = history.length;
 
             const word = cmd.toLowerCase().split(/\s+/)[0];
+            const mine = findCustom(word);
             const name = COMMANDS[word] ? word : ALIASES[word];
-            if (name) COMMANDS[name]();
+            if (mine) reply(isAr() ? mine.ar || mine.en : mine.en || mine.ar);
+            else if (name) COMMANDS[name]();
             else line(t().notFound(word), "warm");
         }
 
@@ -184,6 +205,20 @@
             b.addEventListener("click", () => { run(c); });
             chips.append(b);
         });
+
+        function customChips() {
+            qa("button.custom", chips).forEach((b) => b.remove());
+            custom().filter((c) => c.chip).forEach((c) => {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.className = "custom";
+                b.textContent = c.name;
+                b.addEventListener("click", () => run(c.name));
+                chips.append(b);
+            });
+        }
+        window.addEventListener("site:content", customChips);
+        customChips();   // in case the content loaded before this script ran
 
         welcome();
         // Reprint the welcome text when the language changes (if the visitor hasn't used the terminal yet)
@@ -227,21 +262,27 @@
     // =====================================================
     // 3D tilt + glare on cards
     // =====================================================
-    qa(".work, .card, .stat, .cCard").forEach((el) => {
-        el.classList.add("tilt");
-        el.addEventListener("pointermove", (e) => {
-            const r = el.getBoundingClientRect();
-            const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-            el.classList.add("tilting");
-            el.style.transform = `perspective(900px) rotateX(${(0.5 - y) * 8}deg) rotateY(${(x - 0.5) * 10}deg) translateY(-6px)`;
-            el.style.setProperty("--mx", x * 100 + "%");
-            el.style.setProperty("--my", y * 100 + "%");
-        });
-        el.addEventListener("pointerleave", () => {
-            el.classList.remove("tilting");
-            el.style.transform = "";
-        });
+    const TILT = ".work, .card, .stat, .cCard";
+    let tilted = null;
+    const untilt = () => {
+        if (!tilted) return;
+        tilted.classList.remove("tilting");
+        tilted.style.transform = "";
+        tilted = null;
+    };
+    document.addEventListener("pointermove", (e) => {
+        const el = e.target.closest?.(TILT);
+        if (el !== tilted) untilt();
+        if (!el) return;
+        tilted = el;
+        const r = el.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        el.classList.add("tilt", "tilting");
+        el.style.transform = `perspective(900px) rotateX(${(0.5 - y) * 8}deg) rotateY(${(x - 0.5) * 10}deg) translateY(-6px)`;
+        el.style.setProperty("--mx", x * 100 + "%");
+        el.style.setProperty("--my", y * 100 + "%");
     });
+    document.addEventListener("pointerleave", untilt);
 
     // =====================================================
     // Magnetic buttons

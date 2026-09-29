@@ -22,6 +22,11 @@
             if (sessionStorage.getItem("introSeen") || location.search.includes("preview")) document.documentElement.classList.add("no-intro");
             else document.documentElement.classList.add("intro-lock");
         } catch (e) { document.documentElement.classList.add("no-intro"); }
+        // ألوان الموقع المختارة من لوحة التحكم (من آخر زيارة) حتى لا تومض الألوان الافتراضية
+        try {
+            var css = localStorage.getItem("themeCSS");
+            if (css) { var st = document.createElement("style"); st.id = "themeColors"; st.textContent = css; document.head.appendChild(st); }
+        } catch (e) {}
     </script>
 </head>
 <body>
@@ -396,6 +401,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="i18n-en.js"></script>
+    <script src="site-data.js"></script>
     <script src="script.js"></script>
     <script src="intro.js"></script>
     <script src="interact.js"></script>

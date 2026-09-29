@@ -47,9 +47,11 @@
             <nav class="side__nav">
                 <button class="active" data-tab="texts">📝 النصوص</button>
                 <button data-tab="roles">⌨️ المسميات المتحركة</button>
-                <button data-tab="contact">📞 التواصل</button>
-                <button data-tab="projects">🗂️ المشاريع</button>
                 <button data-tab="skills">📊 المهارات</button>
+                <button data-tab="contact">📞 حسابات التواصل</button>
+                <button data-tab="commands">💻 أوامر الترمنال</button>
+                <button data-tab="colors">🎨 الألوان</button>
+                <button data-tab="projects">🗂️ المشاريع</button>
                 <button data-tab="publish">🚀 النشر والإعدادات</button>
             </nav>
             <button class="side__out" id="logout">تسجيل الخروج</button>
@@ -85,12 +87,48 @@
                 </div>
             </section>
 
-            <!-- Contact -->
+            <!-- Contact accounts -->
             <section class="tab" data-panel="contact" hidden>
-                <div class="grid2">
-                    <label class="field"><span>البريد الإلكتروني</span><input type="email" id="cEmail" dir="ltr"></label>
-                    <label class="field"><span>رقم الجوال (كما يظهر)</span><input type="text" id="cPhone" dir="ltr"></label>
-                    <label class="field"><span>رقم الواتساب (بالمفتاح الدولي بدون +)</span><input type="text" id="cWhats" dir="ltr" placeholder="966557243832"></label>
+                <p class="hint">أضف أي حساب (إكس، إنستقرام، سناب…) أو احذفه، ورتّبها بالأسهم. اكتب اسم المستخدم أو الرابط كامل.</p>
+                <div id="contactsList" class="rows"></div>
+                <button class="btn btn--ghost add-btn" id="addContact" type="button">＋ إضافة حساب</button>
+            </section>
+
+            <!-- Terminal commands -->
+            <section class="tab" data-panel="commands" hidden>
+                <p class="hint">
+                    أوامر خاصة فيك يكتبها الزائر في الترمنال. اسم الأمر بدون مسافات (مثل <code>hobby</code>)، وتقدر تضيف أسماء بديلة مفصولة بفاصلة (مثل <code>هواياتي, hobbies</code>).
+                    الروابط اللي تبدأ بـ https:// تصير قابلة للضغط. الأمر الخاص يتقدّم على الأوامر الجاهزة إذا تشابه الاسم.
+                </p>
+                <div id="commandsList" class="rows"></div>
+                <button class="btn btn--ghost add-btn" id="addCommand" type="button">＋ إضافة أمر</button>
+            </section>
+
+            <!-- Colors -->
+            <section class="tab" data-panel="colors" hidden>
+                <div class="card-box">
+                    <h3>ألوان جاهزة</h3>
+                    <div class="presets" id="presets"></div>
+                </div>
+                <div class="card-box">
+                    <h3>ألوانك الخاصة</h3>
+                    <div class="grid2">
+                        <label class="field color-field"><span>اللون الأساسي (الأزرار، العناوين، الأشرطة)</span>
+                            <span class="color-row"><input type="color" id="cPrimary"><input type="text" id="cPrimaryHex" dir="ltr" maxlength="7"></span>
+                        </label>
+                        <label class="field color-field"><span>اللون المميز (الكلمة الثانية في العناوين، القائمة)</span>
+                            <span class="color-row"><input type="color" id="cAccent"><input type="text" id="cAccentHex" dir="ltr" maxlength="7"></span>
+                        </label>
+                    </div>
+                    <div class="swatch" id="swatch">
+                        <div class="swatch__title"><span class="sw-t1">من</span> <span class="sw-t2">أنا</span></div>
+                        <div class="swatch__row">
+                            <span class="sw-btn">وظّفني</span>
+                            <span class="sw-chip">⚡ سريع التعلّم</span>
+                            <span class="sw-bar"><i></i></span>
+                        </div>
+                    </div>
+                    <div class="row"><button class="btn btn--danger" id="resetColors" type="button">إرجاع الألوان الأصلية</button></div>
                 </div>
             </section>
 
@@ -102,8 +140,18 @@
 
             <!-- Skills -->
             <section class="tab" data-panel="skills" hidden>
-                <p class="hint">نسبة كل شريط في قسم المهارات التقنية.</p>
-                <div id="skillsList" class="cards"></div>
+                <div class="card-box">
+                    <h3>المهارات التقنية</h3>
+                    <p class="hint">اسم المهارة، نسبتها، ووصف المستوى بالعربي والإنجليزي.</p>
+                    <div id="skillsList" class="rows"></div>
+                    <button class="btn btn--ghost add-btn" id="addSkill" type="button">＋ إضافة مهارة</button>
+                </div>
+                <div class="card-box">
+                    <h3>المهارات الشخصية</h3>
+                    <p class="hint">تقدر تحط إيموجي في البداية مثل ⚡ أو 🎯.</p>
+                    <div id="chipsList" class="rows"></div>
+                    <button class="btn btn--ghost add-btn" id="addChip" type="button">＋ إضافة مهارة شخصية</button>
+                </div>
             </section>
 
             <!-- Publish -->
@@ -140,6 +188,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="i18n-en.js"></script>
+    <script src="site-data.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>

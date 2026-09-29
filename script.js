@@ -156,17 +156,10 @@ function applyContent(c) {
     if (c.roles?.ar?.length) ROLES.ar = c.roles.ar;
     if (c.roles?.en?.length) ROLES.en = c.roles.en;
 
-    const ct = c.contact || {};
-    if (ct.email) {
-        EMAIL = ct.email;
-        $("#cEmail").href = "mailto:" + ct.email;
-        $("#cEmail .val").textContent = ct.email;
-    }
-    if (ct.phone) {
-        $("#cPhone").href = "tel:" + ct.phone.replace(/[^\d+]/g, "");
-        $("#cPhone .val").textContent = ct.phone;
-    }
-    if (ct.whatsapp) $("#cWhats").href = "https://wa.me/" + ct.whatsapp.replace(/\D/g, "");
+    renderContacts(c);
+    renderSkills(c);
+    applyTheme(c.theme);
+    window.SITE_COMMANDS = Array.isArray(c.commands) ? c.commands : [];
 
     Object.entries(c.projects || {}).forEach(([id, p]) => {
         const card = $(`[data-project="${id}"]`);
@@ -179,11 +172,94 @@ function applyContent(c) {
         $(".badge", card).classList.toggle("badge--live", !!p.live);
     });
 
-    Object.entries(c.skills || {}).forEach(([id, v]) => {
-        const bar = $(`[data-skill="${id}"]`);
-        const n = Math.max(0, Math.min(100, +v));
-        if (bar && !isNaN(n)) bar.style.setProperty("--w", n + "%");
+    // نسب المهارات القديمة (قبل قائمة المهارات القابلة للتعديل)
+    if (!Array.isArray(c.skillsList)) {
+        Object.entries(c.skills || {}).forEach(([id, v]) => {
+            const bar = $(`[data-skill="${id}"]`);
+            const n = Math.max(0, Math.min(100, +v));
+            if (bar && !isNaN(n)) bar.style.setProperty("--w", n + "%");
+        });
+    }
+}
+
+const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+};
+// نص ثنائي اللغة يتبدل مع زر اللغة
+function i18nText(node, key, ar, en) {
+    AR[key] = ar || en || "";
+    EN[key] = en || ar || "";
+    node.dataset.i18n = key;
+    node.textContent = (lang === "en" ? EN : AR)[key];
+    return node;
+}
+
+function renderContacts(c) {
+    const TYPES = window.CONTACT_TYPES;
+    let list = Array.isArray(c.contacts) ? c.contacts : null;
+    if (!list) {   // التوافق مع الإعداد القديم
+        const old = c.contact || {};
+        list = window.DEFAULT_CONTACTS.map((d) => ({ ...d, value: old[d.type === "whatsapp" ? "whatsapp" : d.type] || d.value }));
+    }
+    list = list.filter((x) => TYPES[x.type] && (x.value || "").trim());
+
+    const box = $(".contact__cards"), copy = $("#copyEmail");
+    $$(".cCard", box).forEach((n) => n.remove());
+    list.forEach((x, i) => {
+        const T = TYPES[x.type];
+        const a = el("a", "cCard");
+        a.href = T.href(x.value);
+        if (T.blank) { a.target = "_blank"; a.rel = "noopener"; }
+        const ico = el("span", "cCard__ico");
+        ico.innerHTML = T.icon;   // أيقونات ثابتة من site-data.js
+        const txt = el("span");
+        const small = i18nText(el("small"), `dyn.contact.${i}`, x.ar || T.ar, x.en || T.en);
+        const val = el("b", "val", T.show(x.value));
+        val.dir = "ltr";
+        txt.append(small, val);
+        a.append(ico, txt);
+        box.insertBefore(a, copy);
     });
+
+    const firstEmail = list.find((x) => x.type === "email");
+    copy.hidden = !firstEmail;
+    if (firstEmail) EMAIL = firstEmail.value.trim();
+}
+
+function renderSkills(c) {
+    if (Array.isArray(c.skillsList)) {
+        const ul = $(".bars");
+        ul.textContent = "";
+        c.skillsList.forEach((s, i) => {
+            const n = Math.max(0, Math.min(100, +s.level || 0));
+            const li = el("li");
+            const head = el("div", "bar-head");
+            head.append(el("span", "", s.name || ""), i18nText(el("span", "lvl"), `dyn.skill.${i}`, s.ar, s.en));
+            const bar = el("div", "bar");
+            const fill = el("i");
+            fill.style.setProperty("--w", n + "%");
+            bar.append(fill);
+            li.append(head, bar);
+            ul.append(li);
+        });
+    }
+    if (Array.isArray(c.chips)) {
+        const ul = $(".chips");
+        ul.textContent = "";
+        c.chips.forEach((ch, i) => ul.append(i18nText(el("li"), `dyn.chip.${i}`, ch.ar, ch.en)));
+    }
+}
+
+function applyTheme(t) {
+    const css = t ? window.buildThemeCSS(t.primary, t.accent) : "";
+    let tag = document.getElementById("themeColors");
+    if (!tag) { tag = document.createElement("style"); tag.id = "themeColors"; document.head.append(tag); }
+    tag.textContent = css;
+    store.set("themeCSS", css);   // يُطبَّق فورًا في الزيارة القادمة
+    if (t?.primary) $('meta[name="theme-color"]')?.setAttribute("content", t.primary);
 }
 
 async function loadContent() {
@@ -239,4 +315,7 @@ logo.addEventListener("click", (e) => { if (taps || unlocked) e.preventDefault()
 $("#year").textContent = new Date().getFullYear();
 setLang(lang);
 onScroll();
-loadContent().then((c) => { if (c) { applyContent(c); setLang(lang); } });
+loadContent().then((c) => {
+    if (c) { applyContent(c); setLang(lang); }
+    window.dispatchEvent(new Event("site:content"));
+});
