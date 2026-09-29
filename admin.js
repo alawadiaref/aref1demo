@@ -15,18 +15,13 @@ const GROUPS = {
     skills: "المهارات", lvl: "مستويات المهارات", lang: "اللغات", works: "الأعمال", contact: "التواصل",
     form: "نموذج الرسالة", footer: "التذييل", term: "الترمنال التفاعلي",
 };
-const PROJECTS = [
-    { id: "w1", img: "assets/imgs/landingPage.png", name: "works.w1.t" },
-    { id: "w2", img: "assets/imgs/webApp.png", name: "works.w2.t" },
-    { id: "w3", img: "assets/imgs/app.png", name: "works.w3.t" },
-];
 const DEFAULT_ROLES = {
     ar: ["مبرمج طموح", "مطوّر ويب", "متعلّم لا يتوقف", "صانع أفكار"],
     en: ["Aspiring Developer", "Web Developer", "Lifelong Learner", "Software Engineer"],
 };
 const ORIGINAL_COLORS = { primary: "#5e9eae", accent: "#7c4e4e" };
 // نصوص تُدار من قوائم المهارات والتواصل بدل تبويب النصوص
-const LIST_KEYS = /^(skills\.s\d+|lvl\..+|contact\.(email|phone|wa|waCta))$/;
+const LIST_KEYS = /^(skills\.s\d+|lvl\..+|contact\.(email|phone|wa|waCta)|works\.w\d+\.[td]|preview\..+)$/;
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -116,7 +111,7 @@ $("#logout").addEventListener("click", () => {
 });
 
 // ================= Data =================
-const DEF = { ar: {}, en: { ...window.EN_TEXT }, skills: {}, skillsList: [], chips: [], contacts: window.DEFAULT_CONTACTS };
+const DEF = { ar: {}, en: { ...window.EN_TEXT }, skills: {}, skillsList: [], chips: [], contacts: window.DEFAULT_CONTACTS, projectsList: [] };
 let content = {};
 let dirty = false;
 const copy = (x) => JSON.parse(JSON.stringify(x));
@@ -132,6 +127,15 @@ async function loadDefaults() {
         const level = parseInt(fill.style.getPropertyValue("--w"), 10) || 0;
         DEF.skills[fill.dataset.skill] = level;
         return { id: fill.dataset.skill, key, name: $(".bar-head span", li).textContent, level, ar: DEF.ar[key], en: DEF.en[key] };
+    });
+    DEF.projectsList = $$("[data-project]", doc).map((li) => {
+        const t = $("h3", li).dataset.i18n, d = $("p", li).dataset.i18n;
+        return {
+            id: li.dataset.project, tKey: t, dKey: d,
+            titleAr: DEF.ar[t], titleEn: DEF.en[t], descAr: DEF.ar[d], descEn: DEF.en[d],
+            tags: $$(".tags span", li).map((x) => x.textContent).join(", "),
+            url: "", image: $("img", li).getAttribute("src"), live: false,
+        };
     });
     DEF.chips = $$(".chips li", doc).map((li) => ({ ar: DEF.ar[li.dataset.i18n], en: DEF.en[li.dataset.i18n] }));
 }
@@ -151,7 +155,6 @@ function normalize(c) {
     c.text.ar ??= {};
     c.text.en ??= {};
     c.roles ??= {};
-    c.projects ??= {};
     const T = (l, k) => c.text[l][k] ?? DEF[l][k];
 
     if (!Array.isArray(c.skillsList)) {
@@ -167,6 +170,13 @@ function normalize(c) {
         c.contacts = DEF.contacts.map((d) => ({ ...d, value: old[d.type] || d.value }));
     }
     if (!Array.isArray(c.commands)) c.commands = [];
+    if (!Array.isArray(c.projectsList)) {
+        c.projectsList = DEF.projectsList.map((d) => ({
+            titleAr: T("ar", d.tKey), titleEn: T("en", d.tKey), descAr: T("ar", d.dKey), descEn: T("en", d.dKey),
+            tags: d.tags, image: d.image, url: c.projects?.[d.id]?.url || "", live: !!c.projects?.[d.id]?.live,
+        }));
+    }
+    delete c.projects;
     c.theme ??= { ...ORIGINAL_COLORS };
     delete c.skills;
     delete c.contact;
@@ -178,17 +188,33 @@ function setDirty(v = true) {
     const s = $("#status");
     s.textContent = v ? "● تغييرات غير منشورة" : "✓ كل شيء محفوظ";
     s.classList.toggle("dirty", v);
-    if (v) ls.set("contentDraft", JSON.stringify(clean(content)));
+    if (v) saveDraft();
+    else { ls.del("contentDraft"); ls.del("contentDraftDirty"); }
+}
+
+// المسودة تُحفظ في المتصفح حتى لا تضيع التعديلات عند المعاينة أو إعادة تحميل الصفحة
+function saveDraft() {
+    try {
+        localStorage.setItem("contentDraft", JSON.stringify(clean(content)));
+        localStorage.setItem("contentDraftDirty", "1");
+        return true;
+    } catch {
+        toast("⚠️ المسودة كبيرة على ذاكرة المتصفح — انشر التعديلات قريبًا حتى لا تضيع الصور");
+        return false;
+    }
 }
 
 // يحذف القيم المطابقة للافتراضي حتى يبقى الملف صغيرًا
 function clean(c) {
-    const out = { text: { ar: {}, en: {} }, roles: {}, projects: {} };
+    const out = { text: { ar: {}, en: {} }, roles: {} };
     for (const l of ["ar", "en"]) {
         for (const [k, v] of Object.entries(c.text[l])) if (v !== DEF[l][k]) out.text[l][k] = v;
         if (c.roles[l]?.length && c.roles[l].join("\n") !== DEFAULT_ROLES[l].join("\n")) out.roles[l] = c.roles[l];
     }
-    for (const [k, p] of Object.entries(c.projects)) if (p.url || p.live) out.projects[k] = { url: p.url || "", live: !!p.live };
+    const projKeys = ["titleAr", "titleEn", "descAr", "descEn", "tags", "url", "image", "live"];
+    const pick = (p) => Object.fromEntries(projKeys.map((k) => [k, k === "live" ? !!p[k] : p[k] || ""]));
+    const projects = c.projectsList.map(pick);
+    if (!same(projects, DEF.projectsList.map(pick))) out.projectsList = projects;
 
     const skills = c.skillsList.map(({ name, level, ar, en }) => ({ name, level: +level, ar, en }));
     if (!same(skills, DEF.skillsList.map(({ name, level, ar, en }) => ({ name, level, ar, en })))) out.skillsList = skills;
@@ -303,45 +329,6 @@ function renderRoles() {
             content.roles[l] = ta.value.split("\n").map((s) => s.trim()).filter(Boolean);
             setDirty();
         };
-    });
-}
-
-function renderProjects() {
-    const list = $("#projectsList");
-    list.textContent = "";
-    PROJECTS.forEach((p) => {
-        const data = (content.projects[p.id] ??= { url: "", live: false });
-        const box = document.createElement("div");
-        box.className = "card-box";
-
-        const img = document.createElement("img");
-        img.src = p.img;
-        img.alt = "";
-        const h = document.createElement("h3");
-        h.textContent = content.text.ar[p.name] ?? DEF.ar[p.name];
-
-        const f = document.createElement("label");
-        f.className = "field";
-        const fs = document.createElement("span");
-        fs.textContent = "رابط المشروع (https://…)";
-        const url = document.createElement("input");
-        url.type = "url";
-        url.dir = "ltr";
-        url.placeholder = "https://";
-        url.value = data.url || "";
-        url.addEventListener("input", () => { data.url = url.value.trim(); setDirty(); });
-        f.append(fs, url);
-
-        const c = document.createElement("label");
-        c.className = "check";
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = !!data.live;
-        cb.addEventListener("change", () => { data.live = cb.checked; setDirty(); });
-        c.append(cb, " المشروع متاح الآن (بدل «قريبًا»)");
-
-        box.append(img, h, f, c);
-        list.append(box);
     });
 }
 
@@ -524,6 +511,78 @@ $("#cPrimaryHex").addEventListener("change", (e) => setColor("primary", e.target
 $("#cAccentHex").addEventListener("change", (e) => setColor("accent", e.target.value.trim()));
 $("#resetColors").addEventListener("click", () => { content.theme = { ...ORIGINAL_COLORS }; paintSwatch(); setDirty(); });
 
+// ---------- Projects ----------
+// يصغّر الصورة المرفوعة (أقصى عرض 1000px) ويحولها لـ WebP حتى يبقى حجمها صغير
+function shrinkImage(file) {
+    return new Promise((resolve, reject) => {
+        if (!/^image\/(png|jpe?g|webp|gif)$/i.test(file.type)) return reject(new Error("type"));
+        const img = new Image();
+        img.onload = () => {
+            const scale = Math.min(1, 1000 / img.width, 1000 / img.height);
+            const cv = document.createElement("canvas");
+            cv.width = Math.round(img.width * scale);
+            cv.height = Math.round(img.height * scale);
+            cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+            URL.revokeObjectURL(img.src);
+            let out = cv.toDataURL("image/webp", 0.85);
+            if (!out.startsWith("data:image/webp")) out = cv.toDataURL("image/jpeg", 0.85);
+            resolve(out);
+        };
+        img.onerror = () => reject(new Error("load"));
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+function renderProjects() {
+    listEditor($("#projectsList"), content.projectsList, (p) => {
+        // الصورة
+        const pic = mk("div", { className: "proj-pic" });
+        const paint = () => {
+            pic.textContent = "";
+            if (p.image) pic.append(mk("img", { src: p.image, alt: "" }));
+            else pic.append(mk("span", { textContent: "لا توجد صورة" }));
+        };
+        paint();
+        const file = mk("input", { type: "file", accept: "image/png,image/jpeg,image/webp,image/gif", hidden: true });
+        file.addEventListener("change", async () => {
+            const f = file.files[0];
+            file.value = "";
+            if (!f) return;
+            try {
+                p.image = await shrinkImage(f);
+                paint();
+                setDirty();
+                toast("تم تجهيز الصورة — تُرفع مع الحفظ والنشر");
+            } catch { toast("الصورة غير مدعومة — استخدم PNG أو JPG أو WebP"); }
+        });
+        const upload = mk("label", { className: "btn btn--ghost small-btn" }, "📷 رفع صورة", file);
+        const clear = mk("button", { type: "button", className: "btn btn--danger small-btn", textContent: "إزالة الصورة" });
+        clear.addEventListener("click", () => { p.image = ""; paint(); setDirty(); });
+        const imgUrl = textInput(p.image?.startsWith("data:") ? "" : p.image, (v) => { p.image = v.trim(); paint(); },
+            { ph: "أو رابط صورة https://…", dir: "ltr" });
+
+        const live = mk("input", { type: "checkbox", checked: !!p.live });
+        live.addEventListener("change", () => { p.live = live.checked; setDirty(); });
+
+        return mk("div", { className: "row-fields proj-row" },
+            mk("div", { className: "proj-side" }, pic, mk("div", { className: "row" }, upload, clear), imgUrl),
+            mk("div", { className: "grid2" },
+                field("اسم المشروع بالعربي", textInput(p.titleAr, (v) => { p.titleAr = v; }, { ph: "متجر إلكتروني" })),
+                field("Project name (English)", textInput(p.titleEn, (v) => { p.titleEn = v; }, { ph: "Online store", dir: "ltr" })),
+                field("الوصف بالعربي", textInput(p.descAr, (v) => { p.descAr = v; }, { area: true, rows: 2 })),
+                field("Description (English)", textInput(p.descEn, (v) => { p.descEn = v; }, { area: true, rows: 2, dir: "ltr" })),
+                field("التقنيات (افصلها بفاصلة)", textInput(p.tags, (v) => { p.tags = v; }, { ph: "HTML, CSS, JS", dir: "ltr" })),
+                field("رابط المشروع (اختياري)", textInput(p.url, (v) => { p.url = v.trim(); }, { ph: "https://", dir: "ltr" })),
+            ),
+            mk("label", { className: "check" }, live, " المشروع متاح الآن (بدل «قريبًا»)"),
+        );
+    }, renderProjects);
+}
+$("#addProject").addEventListener("click", () => {
+    content.projectsList.push({ titleAr: "", titleEn: "", descAr: "", descEn: "", tags: "", url: "", image: "", live: false });
+    setDirty(); renderProjects(); focusLast("#projectsList", ".grid2 input");
+});
+
 function renderAll() {
     renderTexts();
     renderRoles();
@@ -581,9 +640,29 @@ async function publish() {
     const btn = $("#publishBtn");
     btn.disabled = true;
     btn.textContent = "جارٍ النشر…";
-    const api = `https://api.github.com/repos/${encodeURIComponent(gh.owner)}/${encodeURIComponent(gh.repo)}/contents/data/content.json`;
+    const repoApi = `https://api.github.com/repos/${encodeURIComponent(gh.owner)}/${encodeURIComponent(gh.repo)}/contents/`;
+    const api = repoApi + "data/content.json";
     const headers = { Authorization: `Bearer ${gh.token}`, Accept: "application/vnd.github+json" };
     try {
+        // 1) رفع صور المشاريع الجديدة إلى assets/projects/
+        const pending = content.projectsList.filter((p) => (p.image || "").startsWith("data:image/"));
+        for (const [n, p] of pending.entries()) {
+            btn.textContent = `رفع الصور ${n + 1}/${pending.length}…`;
+            const [, mime, data] = p.image.match(/^data:image\/([a-z]+);base64,(.+)$/i) || [];
+            if (!data) continue;
+            const ext = mime.toLowerCase() === "jpeg" ? "jpg" : mime.toLowerCase();
+            const path = `assets/projects/${Date.now()}-${n + 1}.${ext}`;
+            const up = await fetch(repoApi + path, {
+                method: "PUT", headers,
+                body: JSON.stringify({ message: "Upload project image from admin panel", content: data, branch: gh.branch }),
+            });
+            if (!up.ok) throw new Error(up.status);
+            p.image = path;
+        }
+        if (pending.length) { saveDraft(); renderProjects(); }
+        btn.textContent = "جارٍ النشر…";
+
+        // 2) حفظ المحتوى
         let sha;
         const cur = await fetch(`${api}?ref=${encodeURIComponent(gh.branch)}`, { headers, cache: "no-store" });
         if (cur.ok) sha = (await cur.json()).sha;
@@ -613,9 +692,20 @@ async function publish() {
 }
 $("#publishBtn").addEventListener("click", publish);
 
+let leaving = false;
 $("#previewBtn").addEventListener("click", () => {
-    ls.set("contentDraft", JSON.stringify(clean(content)));
-    window.open("index.html?preview", "_blank");
+    saveDraft();
+    if (!dirty) ls.del("contentDraftDirty");   // بدون تعديلات: المعاينة تعرض المحتوى المنشور كما هو
+    leaving = true;
+    location.href = "index.html?preview";
+});
+$("#discardBtn").addEventListener("click", async () => {
+    ls.del("contentDraft");
+    ls.del("contentDraftDirty");
+    content = normalize(await loadContent());
+    renderAll();
+    setDirty(false);
+    toast("تم تجاهل التعديلات غير المنشورة");
 });
 
 // ================= Backup =================
@@ -645,7 +735,7 @@ $("#resetBtn").addEventListener("click", () => {
     setDirty();
 });
 
-addEventListener("beforeunload", (e) => { if (dirty) e.preventDefault(); });
+addEventListener("beforeunload", (e) => { if (dirty && !leaving) e.preventDefault(); });
 
 // ================= Boot =================
 async function openDashboard() {
@@ -656,10 +746,15 @@ async function openDashboard() {
     } catch {
         toast("تعذر تحميل الصفحة الرئيسية — افتح لوحة التحكم من الموقع المنشور");
     }
-    content = normalize(await loadContent());
+    let restored = false;
+    if (ls.get("contentDraftDirty") === "1") {
+        try { content = normalize(JSON.parse(ls.get("contentDraft"))); restored = true; } catch {}
+    }
+    if (!restored) content = normalize(await loadContent());
     loadGhSettings();
     renderAll();
-    setDirty(false);
+    setDirty(restored);
+    if (restored) toast("رجعت لتعديلاتك غير المنشورة ✍️");
 }
 
 if (isLoggedIn()) openDashboard();

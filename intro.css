@@ -160,3 +160,13 @@ html[dir="rtl"] .intro__enter:hover svg { translate: -3px 0; }
     .intro__brand span, .intro__name, .intro__tag, .intro__ring, .intro__skip { opacity: 1; transform: none; filter: none; }
     .intro.leaving { opacity: 0; transition: opacity .3s !important; }
 }
+
+/* short screens (phone sideways) */
+@media (max-height: 520px) {
+    .intro__center { gap: .35rem; }
+    .intro__markWrap { width: 70px; margin-bottom: .2rem; }
+    .intro__name { font-size: clamp(1.8rem, 6vh, 2.6rem); }
+    .intro__tag { font-size: .9rem; }
+    .intro__hint { display: none; }
+    .intro__enter { padding: .7rem 1.8rem; }
+}

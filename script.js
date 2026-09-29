@@ -161,16 +161,7 @@ function applyContent(c) {
     applyTheme(c.theme);
     window.SITE_COMMANDS = Array.isArray(c.commands) ? c.commands : [];
 
-    Object.entries(c.projects || {}).forEach(([id, p]) => {
-        const card = $(`[data-project="${id}"]`);
-        if (!card) return;
-        const link = $(".work__link", card);
-        const safe = /^https?:\/\//i.test(p.url || "");
-        link.hidden = !safe;
-        if (safe) link.href = p.url;
-        $(".badge", card).dataset.i18n = p.live ? "works.live" : "works.soon";
-        $(".badge", card).classList.toggle("badge--live", !!p.live);
-    });
+    renderProjects(c);
 
     // نسب المهارات القديمة (قبل قائمة المهارات القابلة للتعديل)
     if (!Array.isArray(c.skillsList)) {
@@ -251,6 +242,74 @@ function renderSkills(c) {
         ul.textContent = "";
         c.chips.forEach((ch, i) => ul.append(i18nText(el("li"), `dyn.chip.${i}`, ch.ar, ch.en)));
     }
+}
+
+// صورة المشروع: ملف من الموقع، صورة مرفوعة (data:image) أو رابط https
+const safeImg = (src) => /^(assets\/|data:image\/(png|jpe?g|webp|gif);base64,|https:\/\/)/i.test(src || "");
+
+function renderProjects(c) {
+    if (Array.isArray(c.projectsList)) {
+        const ul = $(".works__grid");
+        ul.textContent = "";
+        c.projectsList.forEach((p, i) => {
+            const li = el("li", "work reveal in");
+            const imgBox = el("div", "work__img");
+            if (safeImg(p.image)) {
+                const img = el("img");
+                img.src = p.image;
+                img.alt = p.titleEn || p.titleAr || "";
+                img.loading = "lazy";
+                imgBox.append(img);
+            } else {
+                imgBox.classList.add("work__img--empty");
+                imgBox.append(el("span", "", (p.titleEn || p.titleAr || "?").trim().charAt(0).toUpperCase()));
+            }
+            const bodyEl = el("div", "work__body");
+            const badge = el("span", "badge" + (p.live ? " badge--live" : ""));
+            badge.dataset.i18n = p.live ? "works.live" : "works.soon";
+            badge.textContent = (lang === "en" ? EN : AR)[badge.dataset.i18n];
+            const tags = el("div", "tags");
+            String(p.tags || "").split(",").map((t) => t.trim()).filter(Boolean).forEach((t) => tags.append(el("span", "", t)));
+            bodyEl.append(badge,
+                i18nText(el("h3"), `dyn.proj.${i}.t`, p.titleAr, p.titleEn),
+                i18nText(el("p"), `dyn.proj.${i}.d`, p.descAr, p.descEn),
+                tags);
+            if (/^https?:\/\//i.test(p.url || "")) {
+                const a = el("a", "work__link");
+                a.href = p.url;
+                a.target = "_blank";
+                a.rel = "noopener";
+                a.append(i18nText(el("span"), "works.view", AR["works.view"], EN["works.view"]), " ↗");
+                bodyEl.append(a);
+            }
+            li.append(imgBox, bodyEl);
+            ul.append(li);
+        });
+        return;
+    }
+    // الإعداد القديم: رابط وحالة لكل مشروع من المشاريع الثلاثة
+    Object.entries(c.projects || {}).forEach(([id, p]) => {
+        const card = $(`[data-project="${id}"]`);
+        if (!card) return;
+        const link = $(".work__link", card);
+        const safe = /^https?:\/\//i.test(p.url || "");
+        link.hidden = !safe;
+        if (safe) link.href = p.url;
+        $(".badge", card).dataset.i18n = p.live ? "works.live" : "works.soon";
+        $(".badge", card).classList.toggle("badge--live", !!p.live);
+    });
+}
+
+// شريط وضع المعاينة مع زر الرجوع للوحة التحكم
+if (new URLSearchParams(location.search).has("preview")) {
+    const bar = el("div", "preview-bar");
+    bar.setAttribute("role", "status");
+    const back = el("a", "preview-bar__btn");
+    back.href = "admin.html";
+    back.append(i18nText(el("span"), "preview.back", "رجوع للوحة التحكم", "Back to admin"));
+    bar.append(i18nText(el("span", "preview-bar__txt"), "preview.note", "👁 وضع المعاينة — التعديلات غير منشورة بعد", "👁 Preview mode — changes are not published yet"), back);
+    document.body.append(bar);
+    document.documentElement.classList.add("is-preview");
 }
 
 function applyTheme(t) {
