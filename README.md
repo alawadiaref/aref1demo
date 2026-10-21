@@ -53,3 +53,9 @@
 
 ## النشر على GitHub Pages
 Settings → Pages → Branch: `main` / root → Save
+
+## الاستضافة 🌐
+- **GitHub Pages:** https://alawadiaref.github.io/aref1demo/ (يتحدّث تلقائياً مع كل رفع إلى `main`).
+- **Firebase Hosting:** https://aref-alawadi.web.app — موقع مستقل داخل مشروع Firebase نفسه (`wtc-net`).
+  - للنشر: انقر نقرتين على `deploy-firebase.cmd` (أول مرة ينشئ الموقع، وبعدها ينشر فقط).
+  - الإعداد في `firebase.json` و`.firebaserc`.

@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "wtc-net"
+  },
+  "targets": {
+    "wtc-net": {
+      "hosting": {
+        "portfolio": ["aref-alawadi"]
+      }
+    }
+  }
+}
