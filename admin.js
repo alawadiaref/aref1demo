@@ -134,7 +134,10 @@ async function loadDefaults() {
             id: li.dataset.project, tKey: t, dKey: d,
             titleAr: DEF.ar[t], titleEn: DEF.en[t], descAr: DEF.ar[d], descEn: DEF.en[d],
             tags: $$(".tags span", li).map((x) => x.textContent).join(", "),
-            url: "", image: $("img", li).getAttribute("src"), live: false,
+            url: (() => { const a = $(".work__link", li); return a && !a.hidden ? a.getAttribute("href") : ""; })(),
+            image: $("img", li).getAttribute("src"),
+            live: !!$(".badge--live", li),
+            featured: li.classList.contains("work--featured"),
         };
     });
     DEF.chips = $$(".chips li", doc).map((li) => ({ ar: DEF.ar[li.dataset.i18n], en: DEF.en[li.dataset.i18n] }));
@@ -173,7 +176,8 @@ function normalize(c) {
     if (!Array.isArray(c.projectsList)) {
         c.projectsList = DEF.projectsList.map((d) => ({
             titleAr: T("ar", d.tKey), titleEn: T("en", d.tKey), descAr: T("ar", d.dKey), descEn: T("en", d.dKey),
-            tags: d.tags, image: d.image, url: c.projects?.[d.id]?.url || "", live: !!c.projects?.[d.id]?.live,
+            tags: d.tags, image: d.image, url: c.projects?.[d.id]?.url || d.url || "",
+            live: c.projects?.[d.id]?.live ?? d.live, featured: !!d.featured,
         }));
     }
     delete c.projects;
@@ -214,8 +218,8 @@ function clean(c) {
         for (const [k, v] of Object.entries(c.text[l])) if (v !== DEF[l][k]) out.text[l][k] = v;
         if (c.roles[l]?.length && c.roles[l].join("\n") !== DEFAULT_ROLES[l].join("\n")) out.roles[l] = c.roles[l];
     }
-    const projKeys = ["titleAr", "titleEn", "descAr", "descEn", "tags", "url", "image", "live"];
-    const pick = (p) => Object.fromEntries(projKeys.map((k) => [k, k === "live" ? !!p[k] : p[k] || ""]));
+    const projKeys = ["titleAr", "titleEn", "descAr", "descEn", "tags", "url", "image", "live", "featured"];
+    const pick = (p) => Object.fromEntries(projKeys.map((k) => [k, k === "live" || k === "featured" ? !!p[k] : p[k] || ""]));
     const projects = c.projectsList.map(pick);
     if (!same(projects, DEF.projectsList.map(pick))) out.projectsList = projects;
 

@@ -332,6 +332,18 @@ html[dir="rtl"] .bar i { margin-inline-start: 0; background: linear-gradient(270
 .work__img img { max-height: 100%; object-fit: contain; transition: transform .5s; filter: drop-shadow(0 12px 20px rgba(0, 0, 0, .2)); }
 .work:hover .work__img img { transform: scale(1.1) rotate(-2deg); }
 .work__body { padding: 1.4rem 1.5rem 1.6rem; }
+
+/* المشروع المنجز يأخذ الصف كاملاً: صورة عريضة بجانب الوصف */
+.work--featured { grid-column: 1 / -1; display: grid; grid-template-columns: 1.35fr 1fr; align-items: center; }
+.work--featured .work__img { aspect-ratio: 16 / 10; padding: 1.25rem 1.5rem; height: 100%; }
+.work--featured .work__img img { width: 100%; height: auto; max-height: 100%; object-fit: contain; }
+.work--featured .work__body { padding: 2rem 2.2rem; }
+.work--featured h3 { font-size: 1.5rem; }
+.work--featured:hover .work__img img { transform: scale(1.03); }
+@media (max-width: 860px) {
+    .work--featured { grid-template-columns: 1fr; }
+    .work--featured .work__body { padding: 1.4rem 1.5rem 1.6rem; }
+}
 .badge {
     display: inline-block; font-size: .78rem; font-weight: 700; padding: .15rem .7rem; border-radius: 999px;
     color: var(--maroon); background: color-mix(in srgb, var(--maroon) 14%, transparent);

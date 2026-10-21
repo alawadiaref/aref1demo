@@ -253,7 +253,7 @@ function renderProjects(c) {
         const ul = $(".works__grid");
         ul.textContent = "";
         c.projectsList.forEach((p, i) => {
-            const li = el("li", "work reveal in");
+            const li = el("li", "work reveal in" + (p.featured ? " work--featured" : ""));
             const imgBox = el("div", "work__img");
             if (safeImg(p.image)) {
                 const img = el("img");
